@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FCP — Federal Containment and Protection</title>
+<style>
+:root{--bg:#1b1b20;--panel:#26262d;--panel2:#2f2f38;--line:#3d3d4a;--text:#e6e4ee;--mut:#9b98ab;--pur:#9d6bff;--pur2:#6d3fd1;--bad:#ff6b8a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+.hide{display:none!important}h1,h2,h3{margin:0 0 .5rem}
+button,input,select,textarea{font:inherit;color:var(--text)}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:.55rem .7rem;margin:.25rem 0 .8rem}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--pur2);border-color:var(--pur)}
+.btn{background:var(--pur2);border:0;border-radius:6px;padding:.5rem 1rem;cursor:pointer}
+.btn:hover{background:var(--pur)}.btn.ghost{background:transparent;border:1px solid var(--pur2)}.btn.danger{background:#7a2a42}.btn.sm{padding:.2rem .6rem;font-size:.8rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;padding:1rem 1.5rem;border-bottom:1px solid var(--line);background:var(--panel)}
+.logo{font-weight:700;letter-spacing:.12em}.logo span{color:var(--pur)}
+.wrap{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+.hero{padding:3rem 0 2rem}.hero p,.lead{color:var(--mut);max-width:62ch;font-size:1.05rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1.5rem 0}
+.card{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--pur2);border-radius:8px;padding:1.1rem}.card p{color:var(--mut);margin:0}
+footer{color:var(--mut);font-size:.85rem;padding:2rem 1.5rem;text-align:center;border-top:1px solid var(--line)}
+.login-link{position:fixed;right:12px;bottom:12px;font-size:.75rem;background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:.35rem .7rem;border-radius:20px;cursor:pointer}
+.login-link:hover{color:var(--pur);border-color:var(--pur)}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+.term{width:100%;max-width:420px;background:#14141a;border:1px solid var(--pur2);border-radius:8px;padding:1.5rem;font-family:ui-monospace,Menlo,Consolas,monospace;box-shadow:0 0 30px rgba(109,63,209,.25)}
+.term h2{color:var(--pur);font-size:1.1rem}.term label,label{font-size:.8rem;color:var(--mut)}
+.msg{min-height:1.4em;font-size:.85rem;color:var(--bad)}.msg.ok{color:#7be0a4}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+#app header{position:sticky;top:0;z-index:2}
+main{max-width:960px;margin:0 auto;padding:1.2rem 1.5rem}
+.tabs{max-width:960px;margin:0 auto;padding:.8rem 1.5rem 0;display:flex;gap:.4rem}.tab{background:transparent;border:1px solid var(--line);border-radius:6px;padding:.4rem 1rem;cursor:pointer;color:var(--mut)}.tab.on{color:var(--text);border-color:var(--pur2);background:var(--panel2)}
+.crumbs{font-size:1.25rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
+.crumbs a{cursor:pointer;color:var(--mut)}.crumbs a:hover{color:var(--pur)}.crumbs b{font-weight:500}.crumbs i{color:var(--line);font-style:normal}
+.list{border-top:1px solid var(--line)}
+.fr{display:flex;align-items:center;gap:.8rem;padding:.7rem .6rem;border-bottom:1px solid var(--line);cursor:pointer}
+.fr:hover{background:var(--panel2)}.fr .n{flex:1}.fr svg{flex:none}
+.empty{color:var(--mut);padding:1.5rem .6rem}
+.bar{background:var(--panel);border:1px solid var(--pur2);border-radius:8px;padding:.8rem;margin-bottom:1rem}
+.doc{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.2rem;margin:1rem 0;white-space:pre-wrap;min-height:6rem}
+table{width:100%;border-collapse:collapse}td,th{padding:.4rem;border-bottom:1px solid var(--line);text-align:left}.scroll{overflow-x:auto}
+.sh{margin:2.5rem 0 .8rem;color:var(--pur);font-size:.85rem;text-transform:uppercase;letter-spacing:.12em}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin:1rem 0}.stats div{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:1rem;color:var(--mut);font-size:.85rem}.stats b{display:block;font-size:1.8rem;color:var(--pur)}
+.num{display:inline-block;width:1.8rem;height:1.8rem;line-height:1.8rem;text-align:center;border-radius:50%;background:var(--pur2);margin-bottom:.5rem}
+ul.tips{color:var(--mut);padding-left:1.2rem}ul.tips li{margin:.4rem 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.7rem 1rem;margin:.5rem 0}summary{cursor:pointer;font-weight:600}details p{color:var(--mut);margin:.6rem 0 0}
+</style></head><body>
+
+<div id="cover">
+<header><div class="logo">F<span>C</span>P</div><nav style="color:var(--mut);font-size:.9rem">Federal Containment and Protection</nav></header>
+<div class="wrap">
+<section class="hero"><h1 style="font-size:2.4rem">Protecting communities from hazards.</h1>
+<p>The Federal Containment and Protection agency works with local, state, and federal partners to identify, secure, and manage hazardous materials and dangerous sites across the country.</p></section>
+<div class="grid">
+<div class="card"><h3>Hazard Assessment</h3><p>Field teams survey incidents and rate risks so that responses match the danger present.</p></div>
+<div class="card"><h3>Secure Containment</h3><p>Hazardous materials are stored in certified, monitored facilities built to strict federal standards.</p></div>
+<div class="card"><h3>Emergency Response</h3><p>Rapid-deployment crews support first responders during spills, leaks, and industrial accidents.</p></div>
+<div class="card"><h3>Public Safety Education</h3><p>Guidance for households and businesses on safe storage, reporting, and evacuation procedures.</p></div>
+</div>
+<div class="stats"><div><b>12</b>Regional offices</div><div><b>340+</b>Certified facilities</div><div><b>24/7</b>Response readiness</div><div><b>100%</b>Annual audit coverage</div></div>
+<h2 class="sh">About FCP</h2>
+<p class="lead">Federal Containment and Protection is a civilian public-safety agency. We exist to keep dangerous materials and sites from harming people, property, and the environment. Our staff include engineers, chemists, health physicists, emergency planners, and field technicians who work alongside fire departments, hospitals, and local governments.</p>
+<p class="lead">Our standards are reviewed every year by independent safety auditors, and our incident summaries are shared with partner agencies so lessons learned reach every region.</p>
+<h2 class="sh">How We Contain Hazards</h2>
+<div class="grid"><div class="card"><span class="num">1</span><h3>Identify</h3><p>Reports from the public, inspectors, and partner agencies are logged and verified by a regional duty officer.</p></div><div class="card"><span class="num">2</span><h3>Assess</h3><p>Specialists measure the hazard, map who could be exposed, and assign a risk rating.</p></div><div class="card"><span class="num">3</span><h3>Isolate</h3><p>Crews set up barriers, ventilation controls, or sealed storage so the hazard cannot spread.</p></div><div class="card"><span class="num">4</span><h3>Monitor and Resolve</h3><p>Sensors and scheduled inspections continue until the hazard is neutralized, removed, or permanently secured.</p></div></div>
+<h2 class="sh">Hazard Categories</h2>
+<div class="grid"><div class="card"><h3>Chemical</h3><p>Toxic, corrosive, flammable, and reactive substances in industrial or transport settings.</p></div><div class="card"><h3>Biological</h3><p>Disease-causing organisms and contaminated materials from labs, hospitals, and farms.</p></div><div class="card"><h3>Radiological</h3><p>Medical, industrial, and research sources that give off radiation and need shielded storage.</p></div><div class="card"><h3>Structural and Industrial</h3><p>Failing tanks, unstable sites, and abandoned facilities that put nearby communities at risk.</p></div></div>
+<h2 class="sh">Risk Ratings</h2>
+<div class="scroll"><table><tr><th>Rating</th><th>Meaning</th><th>Typical response</th></tr><tr><td>Low</td><td>Limited danger to the public</td><td>Routine inspection and monitoring</td></tr><tr><td>Moderate</td><td>Local danger if mishandled</td><td>Dedicated crew and restricted access</td></tr><tr><td>High</td><td>Serious danger to a community</td><td>Perimeter, evacuation planning, partner agencies on standby</td></tr><tr><td>Severe</td><td>Regional danger</td><td>Full emergency deployment and federal coordination</td></tr></table></div>
+<h2 class="sh">Public Safety Tips</h2>
+<ul class="tips"><li>Store household chemicals in their original labeled containers, away from heat and children.</li><li>Never mix cleaning products, especially bleach with ammonia or acids.</li><li>Know your local evacuation routes and keep a go-bag ready.</li><li>If you smell gas or see an unknown leak, leave the area first and report it from a safe distance.</li><li>Follow instructions from local emergency officials during any incident.</li></ul>
+<h2 class="sh">Frequently Asked Questions</h2>
+<details><summary>Who does FCP work with?</summary><p>We partner with local fire and police departments, public health offices, environmental agencies, and private industry to coordinate responses.</p></details>
+<details><summary>Is it safe to live near a containment facility?</summary><p>Yes. Facilities meet strict federal standards, are inspected on a regular schedule, and have emergency plans shared with nearby communities.</p></details>
+<details><summary>How do I report a hazard?</summary><p>If there is immediate danger, call your local emergency number. For non-urgent concerns, use the hazard reporting line below.</p></details>
+<details><summary>Does FCP offer training?</summary><p>Yes. We run workshops for businesses, schools, and community groups on safe storage, spill response, and evacuation.</p></details>
+<h2 class="sh">Contact and Reporting</h2>
+<div class="grid"><div class="card"><h3>Emergencies</h3><p>Call your local emergency number first.</p></div><div class="card"><h3>Hazard Reporting Line</h3><p>1-800-555-0142, staffed around the clock.</p></div><div class="card"><h3>Public Information Office</h3><p>Media and general questions: press@fcp.example</p></div></div>
+</div>
+<footer>© Federal Containment and Protection · Public Information Office · Report a hazard: call your local emergency number</footer>
+<div class="login-link" id="toLogin" role="button" tabindex="0">Staff login</div>
+</div>
+
+<div id="login" class="hide"><div class="term">
+<h2 id="lt">&gt; SECURE TERMINAL</h2>
+<label>USERNAME</label><input id="lu" autocomplete="username" spellcheck="false">
+<label>PASSWORD</label><input id="lp" type="password" autocomplete="current-password">
+<div class="msg" id="lm"></div>
+<div class="row"><button class="btn" id="lgo">Log in</button><button class="btn ghost" id="ladd">Add user</button><button class="btn ghost" id="lback">Back</button></div>
+</div></div>
+
+<div id="app" class="hide">
+<header><div class="logo">THE <span>OBSIDIAN</span> ARCHIVES</div>
+<div class="row"><span id="who" style="color:var(--mut);font-size:.9rem"></span><button class="btn ghost" id="pwBtn">Password</button><button class="btn ghost hide" id="usersBtn">Users</button><button class="btn" id="logout">Log out</button></div></header>
+<div id="toast" class="hide" style="position:fixed;left:12px;bottom:12px;background:#7a2a42;padding:.6rem 1rem;border-radius:6px;max-width:80vw;z-index:9"></div>
+<div class="tabs" id="tabs"></div><main id="main"></main></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getFirestore,collection,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,query,where,onSnapshot,writeBatch} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyBOM2C2uTotbT4TpmyIDbbuZZuA_SyfY-o",authDomain:"obsidian-archives.firebaseapp.com",projectId:"obsidian-archives",storageBucket:"obsidian-archives.firebasestorage.app",messagingSenderId:"104220108252",appId:"1:104220108252:web:26e6af4d7f79215cf75b19"});
+const auth=getAuth(app),fs=getFirestore(app);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LN={user:'User',bv:'Black Vault',admin:'Admin'},mail=u=>u.toLowerCase()+'@toa.local';
+const SPEC={'Agent Files':{'Field Agents':['Finch','Gray','Shard','Stray','Violet','Ward'],'Researchers':['The Glassmind','The Restorer','The Scribe','The Semiotician','The Synthetist']},'Compendium of the Archives':{'Archive Indices':{},'Logo':{},'Verified Resources':{}},'Entities':{'Ecliptic':{},'First Discovered':{},'Newly Discovered':{},'Shadow':{},'Symbol':{},'The Kenopses':{},'Triptych':{}},'Incident Reports':{},'Mission Reports':{}};
+const IC={folder:'<svg width="22" height="22" viewBox="0 0 24 24" fill="#9b98ab"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg>',doc:'<svg width="22" height="22" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="#9d6bff"/><path d="M8 9h8M8 13h6" stroke="#1b1b20" stroke-width="2"/></svg>'};
+const E=e=>({'auth/invalid-credential':'ACCESS DENIED: invalid credentials.','auth/user-not-found':'ACCESS DENIED: invalid credentials.','auth/wrong-password':'ACCESS DENIED: invalid credentials.','auth/email-already-in-use':'Username already exists.','auth/weak-password':'Password must be at least 6 characters.','auth/too-many-requests':'Too many attempts. Try again later.','auth/network-request-failed':'Network error. Check your connection.'}[e.code]||('Error: '+(e.code||e.message)));
+let me=null,V={k:'browse',id:null},ask=null,del=null,tab='arch',unsubs=[],NODES=[],MINE=[],PROF=[],busyReg=false,mode='login';
+const pool=()=>tab==='mine'?MINE:NODES,get=id=>pool().find(x=>x.id===id);
+const kids=p=>pool().filter(x=>x.p===p).sort((a,b)=>(a.t===b.t?0:a.t==='folder'?-1:1)||a.n.localeCompare(b.n));
+const trail=id=>{const r=[];while(id){const n=get(id);if(!n)break;r.unshift(n);id=n.p}return r};
+const show=v=>['cover','login','app'].forEach(x=>$(x).classList.toggle('hide',x!==v));
+function msg(t,ok){$('lm').textContent=t;$('lm').className='msg'+(ok?' ok':'')}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.remove('hide');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add('hide'),7000)}
+const err=e=>toast('Sync error: '+(e.code||e.message));
+
+$('toLogin').onclick=()=>{setMode('login');show('login')};
+$('toLogin').onkeydown=e=>{if(e.key==='Enter')$('toLogin').click()};
+$('lback').onclick=()=>show('cover');
+function setMode(m){mode=m;$('lt').textContent=m==='login'?'> SECURE TERMINAL':'> NEW USER REGISTRATION';$('lgo').textContent=m==='login'?'Log in':'Create user';$('ladd').textContent=m==='login'?'Add user':'Back to login';msg('')}
+$('ladd').onclick=()=>setMode(mode==='login'?'add':'login');
+$('lp').onkeydown=e=>{if(e.key==='Enter')$('lgo').click()};
+$('lgo').onclick=async()=>{const u=$('lu').value.trim(),p=$('lp').value;
+ if(!u||!p)return msg('Enter a username and password.');
+ if(!/^[A-Za-z0-9_.-]{1,30}$/.test(u))return msg('Usernames: up to 30 letters, numbers, . _ -');
+ try{if(mode==='add'){if(p.length<6)return msg('Password must be at least 6 characters.');
+   busyReg=true;const c=await createUserWithEmailAndPassword(auth,mail(u),p);
+   await setDoc(doc(fs,'profiles',c.user.uid),{username:u,role:'user',status:'pending'});
+   await signOut(auth);busyReg=false;$('lp').value='';setMode('login');msg('Request sent. An admin must approve your account before you can log in.',true)}
+  else await signInWithEmailAndPassword(auth,mail(u),p)}
+ catch(e){busyReg=false;msg(E(e))}};
+$('logout').onclick=()=>signOut(auth);
+$('usersBtn').onclick=()=>{V={k:'users'};ask=del=null;render()};
+$('pwBtn').onclick=()=>{V={k:'pw'};ask=del=null;render()};
+$('tabs').onclick=e=>{const b=e.target.closest('[data-t2]');if(b){tab=b.dataset.t2;V={k:'browse',id:null};ask=del=null;render()}};
+
+onAuthStateChanged(auth,async u=>{if(busyReg)return;stop();
+ if(!u){me=null;if(!$('app').classList.contains('hide'))show('cover');return}
+ let s;try{s=await getDoc(doc(fs,'profiles',u.uid))}catch(e){await signOut(auth);msg('Could not load your account.');return}
+ if(!s.exists()){await signOut(auth);msg('ACCESS DENIED: this account was removed.');return}
+ const p=s.data();if(p.status!=='approved'){await signOut(auth);msg('ACCESS PENDING: awaiting admin approval.');return}
+ me={uid:u.uid,u:p.username,role:p.role};$('lu').value=$('lp').value='';enter()});
+function stop(){unsubs.forEach(f=>f());unsubs=[];NODES=[];MINE=[];PROF=[]}
+function enter(){stop();V={k:'browse',id:null};ask=del=null;tab='arch';
+ $('who').textContent=me.u+' ['+LN[me.role]+']';$('usersBtn').classList.toggle('hide',me.role!=='admin');
+ const lv=me.role==='admin'?['user','bv','admin']:me.role==='bv'?['user','bv']:['user'];
+ unsubs.push(onSnapshot(query(collection(fs,'nodes'),where('lv','in',lv)),s=>{NODES=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
+ if(me.role==='admin')unsubs.push(onSnapshot(collection(fs,'profiles'),s=>{PROF=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
+ else unsubs.push(onSnapshot(query(collection(fs,'mine'),where('o','==',me.uid)),s=>{MINE=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
+ unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{const p=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;enter()}},err));
+ show('app');render()}
+function refresh(){if(!me)return;const ae=document.activeElement;if(V.k==='edit'||V.k==='pw'||ask||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))return;render()}
+
+function crumbs(id){const t=trail(id);return `<div class="crumbs"><a data-a="go" data-id="">${tab==='mine'?'My Files':'TOA'}</a>${t.map((n,i)=>`<i>›</i>${i===t.length-1?`<b>${esc(n.n)}</b>`:`<a data-a="go" data-id="${n.id}">${esc(n.n)}</a>`}`).join('')}</div>`}
+function render(){if(!me)return;
+ const np=PROF.filter(x=>x.status==='pending').length;$('usersBtn').textContent=np?'Users ('+np+')':'Users';
+ $('tabs').innerHTML=(me.role==='admin'?[]:[['arch','Archives'],['mine','My Files']]).map(t=>`<button class="tab${tab===t[0]&&V.k!=='pw'?' on':''}" data-t2="${t[0]}">${t[1]}</button>`).join('');
+ if(V.k==='users')return users();if(V.k==='pw')return pwView();
+ if((V.k==='doc'||V.k==='edit')&&!get(V.id))V={k:'browse',id:null};
+ if(V.k==='browse'&&V.id&&!get(V.id))V.id=null;
+ const a=me.role==='admin'||tab==='mine',m=$('main');
+ if(V.k==='edit'){const d=get(V.id);m.innerHTML=crumbs(d.id)+`<label>Title</label><input id="et" value="${esc(d.n)}"><label>Content</label><textarea id="eb" rows="12">${esc(d.b)}</textarea><div class="row"><button class="btn" data-a="save">Save</button><button class="btn ghost" data-a="open" data-id="${d.id}">Cancel</button></div>`;return}
+ if(V.k==='doc'){const d=get(V.id);m.innerHTML=crumbs(d.id)+`<div class="doc">${d.b?esc(d.b):'<span style="color:var(--mut)">This document is empty.</span>'}</div><div class="row"><button class="btn ghost" data-a="go" data-id="${d.p||''}">Back</button>${a?'<button class="btn" data-a="edit">Edit</button>':''}</div>`;return}
+ let h=crumbs(V.id)+(tab==='mine'&&!V.id?'<p style="color:var(--mut);margin:0 0 1rem">Private workspace: only your account can see these files.</p>':'');
+ if(a){h+=`<div class="row" style="margin-bottom:1rem"><button class="btn" data-a="new" data-t="folder">+ Folder</button><button class="btn" data-a="new" data-t="doc">+ Document</button></div>`;
+  if(ask)h+=`<div class="bar"><label>${ask.id?'Rename':'New '+ask.t} name</label><input id="an" value="${esc(ask.id?get(ask.id).n:'')}"><div class="row"><button class="btn" data-a="askok">OK</button><button class="btn ghost" data-a="askno">Cancel</button></div></div>`;
+  if(tab==='arch'&&!NODES.length)h+=`<div class="bar">The archive is empty. <button class="btn sm" data-a="seed">Create starter folders</button></div>`}
+ h+='<div class="list">'+(kids(V.id).map(n=>`<div class="fr" data-a="open" data-id="${n.id}">${IC[n.t]}<span class="n">${esc(n.n)}</span>${a?`${tab==='arch'?`<select data-lv="${n.id}" style="width:auto;margin:0;padding:.2rem .4rem;font-size:.8rem" title="Who can see this">${[['user','Everyone'],['bv','Black Vault and up'],['admin','Admin only']].map(o=>`<option value="${o[0]}" ${n.lv===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>`:''}<button class="btn ghost sm" data-a="ren" data-id="${n.id}">Rename</button><button class="btn danger sm" data-a="del" data-id="${n.id}">${del===n.id?'Sure?':'Remove'}</button>`:''}</div>`).join('')||'<div class="empty">This folder is empty.</div>')+'</div>';
+ m.innerHTML=h;const i=$('an');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter')act('askok')}}}
+async function seed(){const w=writeBatch(fs);const go=(p,sp)=>{if(Array.isArray(sp))sp.forEach(n=>w.set(doc(collection(fs,'nodes')),{p,t:'doc',n,b:'',lv:'user'}));else for(const k in sp){const r=doc(collection(fs,'nodes'));w.set(r,{p,t:'folder',n:k,lv:'user'});go(r.id,sp[k])}};go(null,SPEC);await w.commit()}
+async function act(a,id,t){try{
+ if(a==='go'){V={k:'browse',id:id||null};ask=del=null}
+ else if(a==='open'){const n=get(id);V=n.t==='folder'?{k:'browse',id:n.id}:{k:'doc',id:n.id};ask=del=null}
+ else if(a==='new')ask={t,id:null};
+ else if(a==='ren')ask={id};
+ else if(a==='askno')ask=null;
+ else if(a==='askok'){const v=$('an').value.trim();if(!v)return;const c=tab==='mine'?'mine':'nodes';
+  if(ask.id)await updateDoc(doc(fs,c,ask.id),{n:v});
+  else await addDoc(collection(fs,c),tab==='mine'?{p:V.id,t:ask.t,n:v,b:'',o:me.uid}:{p:V.id,t:ask.t,n:v,b:'',lv:'user'});
+  ask=null}
+ else if(a==='del'){if(del===id){const c=tab==='mine'?'mine':'nodes',rm=new Set([id]);let ch=true;while(ch){ch=false;pool().forEach(n=>{if(rm.has(n.p)&&!rm.has(n.id)){rm.add(n.id);ch=true}})}
+   const w=writeBatch(fs);rm.forEach(i=>w.delete(doc(fs,c,i)));del=null;await w.commit()}else del=id}
+ else if(a==='edit')V.k='edit';
+ else if(a==='save'){const d=get(V.id);await updateDoc(doc(fs,tab==='mine'?'mine':'nodes',d.id),{n:$('et').value.trim()||d.n,b:$('eb').value});V.k='doc'}
+ else if(a==='seed')await seed();
+ else if(a==='appr')await updateDoc(doc(fs,'profiles',id),{status:'approved'});
+ else if(a==='udel'){if(del==='u'+id){del=null;await deleteDoc(doc(fs,'profiles',id))}else del='u'+id}
+}catch(e){toast('Could not save: '+(e.code||e.message))}render()}
+$('main').onclick=e=>{const el=e.target.closest('[data-a]');if(!el)return;if(el.classList.contains('fr')&&e.target.closest('button,select'))return;act(el.dataset.a,el.dataset.id||null,el.dataset.t)};
+$('main').onchange=async e=>{const s=e.target;try{if(s.dataset.lv)await updateDoc(doc(fs,'nodes',s.dataset.lv),{lv:s.value});if(s.dataset.r)await updateDoc(doc(fs,'profiles',s.dataset.r),{role:s.value})}catch(x){toast('Could not save: '+(x.code||x.message))}};
+function users(){const pend=PROF.filter(x=>x.status==='pending'),ok=PROF.filter(x=>x.status!=='pending');
+ $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div>`+(pend.length?`<div class="bar"><b>Pending approval</b>${pend.map(x=>`<div class="row" style="margin-top:.5rem"><span style="flex:1">${esc(x.username)}</span><button class="btn sm" data-a="appr" data-id="${x.id}">Approve</button><button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Deny'}</button></div>`).join('')}</div>`:'')+`<div class="scroll"><table><tr><th>User</th><th>Clearance</th><th></th></tr>${ok.map(x=>`<tr><td>${esc(x.username)}</td><td>${x.id===me.uid?LN[x.role]:`<select data-r="${x.id}" style="margin:0">${['user','bv','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${LN[r]}</option>`).join('')}</select>`}</td><td>${x.id===me.uid?'':`<button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Remove'}</button>`}</td></tr>`).join('')}</table></div>`}
+function pwView(){$('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Change password</b></div><div style="max-width:380px"><label>Current password</label><input id="pw0" type="password" autocomplete="current-password"><label>New password</label><input id="pw1" type="password" autocomplete="new-password"><label>Confirm new password</label><input id="pw2" type="password" autocomplete="new-password"><div class="msg" id="pwm"></div><button class="btn" id="pws">Update password</button></div>`;
+ $('pws').onclick=async()=>{const m=$('pwm'),cur=$('pw0').value,nw=$('pw1').value;m.className='msg';
+  if(!cur||!nw)return m.textContent='Fill in every field.';
+  if(nw!==$('pw2').value)return m.textContent='New passwords do not match.';
+  if(nw.length<6)return m.textContent='Use at least 6 characters.';
+  try{await reauthenticateWithCredential(auth.currentUser,EmailAuthProvider.credential(mail(me.u),cur));await updatePassword(auth.currentUser,nw);
+   ['pw0','pw1','pw2'].forEach(i=>$(i).value='');m.className='msg ok';m.textContent='Password updated.'}
+  catch(e){m.textContent=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password')?'Current password is incorrect.':E(e)}}}
+</script></body></html>
