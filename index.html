@@ -97,18 +97,50 @@ details{background:var(--panel);border:1px solid var(--line);border-radius:8px;p
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {getFirestore,collection,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,query,where,onSnapshot,writeBatch} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {getFirestore,collection,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,query,where,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyBOM2C2uTotbT4TpmyIDbbuZZuA_SyfY-o",authDomain:"obsidian-archives.firebaseapp.com",projectId:"obsidian-archives",storageBucket:"obsidian-archives.firebasestorage.app",messagingSenderId:"104220108252",appId:"1:104220108252:web:26e6af4d7f79215cf75b19"});
 const auth=getAuth(app),fs=getFirestore(app);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LN={user:'User',bv:'Black Vault',admin:'Admin'},mail=u=>u.toLowerCase()+'@toa.local';
 const SPEC={'Agent Files':{'Field Agents':['Finch','Gray','Shard','Stray','Violet','Ward'],'Researchers':['The Glassmind','The Restorer','The Scribe','The Semiotician','The Synthetist']},'Compendium of the Archives':{'Archive Indices':{},'Logo':{},'Verified Resources':{}},'Entities':{'Ecliptic':{},'First Discovered':{},'Newly Discovered':{},'Shadow':{},'Symbol':{},'The Kenopses':{},'Triptych':{}},'Incident Reports':{},'Mission Reports':{}};
+const DOCS=[['Entities/Ecliptic','user',['AE-352']],['Entities/First Discovered','user',['AE-331','AE-332','AE-412-A/B','AE-777','AE-920','Summary[AE-227, AE-331, AE-412-A/B, AE-777]']],['Entities/Newly Discovered','user',['AE-175','AE-214','AE-909','AE-911','AE-923']],['Entities/Shadow','user',['AE-889','AE-913','AE-914','AE-915']],['Entities/Symbol','user',['AE-072','AE-702']],['Entities/The Kenopses','user',['AE-L0','AE-L1','AE-L2','AE-L4','AE-L7','AE-L10','AE-L15','AE-L18','AE-L22','AE-L23','AE-L29','AE-L31','AE-L48']],['Entities/Triptych','user',['AE-000','AE-601','AE-602','AE-603']],['Incident Reports','user',['Incident-01']],['Mission Reports','user',['AE-L0 -/- ECHO-0 Mission Report']],
+['Agent Files/Personnel','bv',['The Accomplice','The Autist','The Decipherer','The FearWeaver','The Keeper','The Key','The Nightshade','The Pseudonymist','The Seeker','The Thinker','The Watcher']],
+['Incident Reports','bv',['Incident-01','Incident-02','Incident-03','Incident-04'],'user'],
+['Departure','bv',['THKR - Departure']],
+['Entities/Echo-Walker','bv',['AE-000X','Echo-Walker Dossier']],
+['Entities/The Kenopses','bv',['AE-L[REDACTED]','AE-L96']],
+['Entities/Newly Discovered','bv',['AE-904']],
+['Field Reports','bv',['Field Report-01','Field Report-02','Field Report-03','Field Report-04','Field Report-05']],
+['Interviews','bv',['Council Analysis-01','Discussion of I-01','Interview w/Hive Mind','Witness Report-01','Wraith Debrief']],
+['Orientation','bv',['Orientation']]];
+const MERGE=[['Entity Files','Entities']];
+const MOVES=['The Accomplice','The Autist','The Decipherer','The FearWeaver','The Keeper','The Key','The Nightshade','The Pseudonymist','The Seeker','The Thinker','The Watcher'].map(n=>['Agent Files/'+n,'Agent Files/Personnel','bv']).concat([['Entities/Kenopses/AE-L[REDACTED]','Entities/The Kenopses'],['Entities/Kenopses/AE-L96','Entities/The Kenopses'],['Entities/New/AE-904','Entities/Newly Discovered']]);
+const DROP=['Compendium of the Black Vault'],CLEAN=['Entities/Kenopses','Entities/New'];
+function pending(){const ops=[],N=NODES.map(n=>({...n})),real=id=>NODES.some(n=>n.id===id);
+ const find=(p,seg,any)=>N.find(n=>n.p===p&&n.n===seg&&(any||n.t==='folder'));
+ const at=(path,any)=>{let p=null,f=null;const a=path.split('/');for(let i=0;i<a.length;i++){f=find(p,a[i],any&&i===a.length-1);if(!f)return null;p=f.id}return f};
+ const ensure=(path,lv)=>{let p=null;for(const seg of path.split('/')){let f=find(p,seg,false);if(!f){const r=doc(collection(fs,'nodes'));f={id:r.id,p,t:'folder',n:seg,lv};N.push(f);ops.push({r,d:{p,t:'folder',n:seg,lv}})}p=f.id}return p};
+ const mv=(n,t)=>{ops.push({r:doc(fs,'nodes',n.id),u:{p:t}});n.p=t};
+ MERGE.forEach(([x,y])=>{const s=at(x),t=at(y);if(!s||!t||!real(s.id))return;
+  N.filter(n=>n.p===s.id).forEach(n=>{if(!N.some(z=>z.p===t.id&&z.n===n.n))mv(n,t.id)});
+  if(!N.some(n=>n.p===s.id)){ops.push({r:doc(fs,'nodes',s.id),del:1});N.splice(N.indexOf(s),1)}});
+ MOVES.forEach(([from,to,lv])=>{const f=at(from,true);if(!f||!real(f.id))return;const t=ensure(to,lv||'user');if(f.p!==t)mv(f,t)});
+ CLEAN.forEach(path=>{const f=at(path);if(!f||!real(f.id)||N.some(n=>n.p===f.id))return;ops.push({r:doc(fs,'nodes',f.id),del:1});N.splice(N.indexOf(f),1)});
+ DROP.forEach(path=>{const f=at(path);if(!f||!real(f.id))return;const s=new Set([f.id]);let c=1;while(c){c=0;N.forEach(n=>{if(s.has(n.p)&&!s.has(n.id)){s.add(n.id);c=1}})}
+  s.forEach(id=>ops.push({r:doc(fs,'nodes',id),del:1}));for(let i=N.length-1;i>=0;i--)if(s.has(N[i].id))N.splice(i,1)});
+ DOCS.forEach(([path,lv,names,flv])=>{const p=ensure(path,flv||lv);names.forEach(n=>{if(!N.some(x=>x.p===p&&x.n===n)){const r=doc(collection(fs,'nodes'));N.push({id:r.id,p,t:'doc',n,lv});ops.push({r,d:{p,t:'doc',n,b:'',lv}})}})});
+ return ops}
+async function importDocs(){const ops=pending();for(let i=0;i<ops.length;i+=400){const w=writeBatch(fs);ops.slice(i,i+400).forEach(o=>o.d?w.set(o.r,o.d):o.u?w.update(o.r,o.u):w.delete(o.r));await w.commit()}toast('Applied '+ops.length+' changes.')}
 const IC={folder:'<svg width="22" height="22" viewBox="0 0 24 24" fill="#9b98ab"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg>',doc:'<svg width="22" height="22" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="#9d6bff"/><path d="M8 9h8M8 13h6" stroke="#1b1b20" stroke-width="2"/></svg>'};
-const E=e=>({'auth/invalid-credential':'ACCESS DENIED: invalid credentials.','auth/user-not-found':'ACCESS DENIED: invalid credentials.','auth/wrong-password':'ACCESS DENIED: invalid credentials.','auth/email-already-in-use':'Username already exists.','auth/weak-password':'Password must be at least 6 characters.','auth/too-many-requests':'Too many attempts. Try again later.','auth/network-request-failed':'Network error. Check your connection.'}[e.code]||('Error: '+(e.code||e.message)));
-let me=null,V={k:'browse',id:null},ask=null,del=null,tab='arch',unsubs=[],NODES=[],MINE=[],PROF=[],busyReg=false,mode='login';
+const E=e=>({'auth/invalid-credential':'ACCESS DENIED: invalid credentials.','auth/user-not-found':'ACCESS DENIED: invalid credentials.','auth/wrong-password':'ACCESS DENIED: invalid credentials.','auth/email-already-in-use':'Username already exists.','auth/weak-password':'Password must be at least 6 characters.','auth/too-many-requests':'Too many attempts. Wait a few minutes and try again.','auth/network-request-failed':'Network error. Check your connection.'}[e.code]||('Error: '+(e.code||e.message)));
+let me=null,V={k:'browse',id:null},ask=null,del=null,tab='arch',unsubs=[],NODES=[],MINE=[],PROF=[],PRES=[],hb=null,busyReg=false,mode='login';
 const pool=()=>tab==='mine'?MINE:NODES,get=id=>pool().find(x=>x.id===id);
-const kids=p=>pool().filter(x=>x.p===p).sort((a,b)=>(a.t===b.t?0:a.t==='folder'?-1:1)||a.n.localeCompare(b.n));
+const nat=(a,b)=>{const x=a.toLowerCase().match(/\d+|\D+/g)||[],y=b.toLowerCase().match(/\d+|\D+/g)||[];
+ for(let i=0;i<Math.min(x.length,y.length);i++){const p=x[i],q=y[i];if(p===q)continue;const pn=/^\d/.test(p),qn=/^\d/.test(q);
+  if(pn&&qn)return (+p-+q)||(p.length-q.length);if(pn!==qn)return pn?-1:1;return p<q?-1:1}
+ return x.length-y.length};
+const kids=p=>pool().filter(x=>x.p===p).sort((a,b)=>(a.t===b.t?0:a.t==='folder'?-1:1)||nat(a.n,b.n));
 const trail=id=>{const r=[];while(id){const n=get(id);if(!n)break;r.unshift(n);id=n.p}return r};
 const show=v=>['cover','login','app'].forEach(x=>$(x).classList.toggle('hide',x!==v));
 function msg(t,ok){$('lm').textContent=t;$('lm').className='msg'+(ok?' ok':'')}
@@ -130,7 +162,7 @@ $('lgo').onclick=async()=>{const u=$('lu').value.trim(),p=$('lp').value;
    await signOut(auth);busyReg=false;$('lp').value='';setMode('login');msg('Request sent. An admin must approve your account before you can log in.',true)}
   else await signInWithEmailAndPassword(auth,mail(u),p)}
  catch(e){busyReg=false;msg(E(e))}};
-$('logout').onclick=()=>signOut(auth);
+$('logout').onclick=async()=>{try{if(me)await setDoc(doc(fs,'presence',me.uid),{username:me.u,role:me.role,t:serverTimestamp(),on:false})}catch(e){}signOut(auth)};
 $('usersBtn').onclick=()=>{V={k:'users'};ask=del=null;render()};
 $('pwBtn').onclick=()=>{V={k:'pw'};ask=del=null;render()};
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t2]');if(b){tab=b.dataset.t2;V={k:'browse',id:null};ask=del=null;render()}};
@@ -141,15 +173,17 @@ onAuthStateChanged(auth,async u=>{if(busyReg)return;stop();
  if(!s.exists()){await signOut(auth);msg('ACCESS DENIED: this account was removed.');return}
  const p=s.data();if(p.status!=='approved'){await signOut(auth);msg('ACCESS PENDING: awaiting admin approval.');return}
  me={uid:u.uid,u:p.username,role:p.role};$('lu').value=$('lp').value='';enter()});
-function stop(){unsubs.forEach(f=>f());unsubs=[];NODES=[];MINE=[];PROF=[]}
+function beat(){if(!me)return;setDoc(doc(fs,'presence',me.uid),{username:me.u,role:me.role,t:serverTimestamp(),on:true}).catch(()=>{});if(me.role==='admin'&&V.k==='users')refresh()}
+function stop(){clearInterval(hb);unsubs.forEach(f=>f());unsubs=[];NODES=[];MINE=[];PROF=[];PRES=[]}
 function enter(){stop();V={k:'browse',id:null};ask=del=null;tab='arch';
  $('who').textContent=me.u+' ['+LN[me.role]+']';$('usersBtn').classList.toggle('hide',me.role!=='admin');
  const lv=me.role==='admin'?['user','bv','admin']:me.role==='bv'?['user','bv']:['user'];
  unsubs.push(onSnapshot(query(collection(fs,'nodes'),where('lv','in',lv)),s=>{NODES=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
+ if(me.role==='admin')unsubs.push(onSnapshot(collection(fs,'presence'),s=>{PRES=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  if(me.role==='admin')unsubs.push(onSnapshot(collection(fs,'profiles'),s=>{PROF=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  else unsubs.push(onSnapshot(query(collection(fs,'mine'),where('o','==',me.uid)),s=>{MINE=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{const p=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;enter()}},err));
- show('app');render()}
+ beat();hb=setInterval(beat,60000);show('app');render()}
 function refresh(){if(!me)return;const ae=document.activeElement;if(V.k==='edit'||V.k==='pw'||ask||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))return;render()}
 
 function crumbs(id){const t=trail(id);return `<div class="crumbs"><a data-a="go" data-id="">${tab==='mine'?'My Files':'TOA'}</a>${t.map((n,i)=>`<i>›</i>${i===t.length-1?`<b>${esc(n.n)}</b>`:`<a data-a="go" data-id="${n.id}">${esc(n.n)}</a>`}`).join('')}</div>`}
@@ -165,7 +199,8 @@ function render(){if(!me)return;
  let h=crumbs(V.id)+(tab==='mine'&&!V.id?'<p style="color:var(--mut);margin:0 0 1rem">Private workspace: only your account can see these files.</p>':'');
  if(a){h+=`<div class="row" style="margin-bottom:1rem"><button class="btn" data-a="new" data-t="folder">+ Folder</button><button class="btn" data-a="new" data-t="doc">+ Document</button></div>`;
   if(ask)h+=`<div class="bar"><label>${ask.id?'Rename':'New '+ask.t} name</label><input id="an" value="${esc(ask.id?get(ask.id).n:'')}"><div class="row"><button class="btn" data-a="askok">OK</button><button class="btn ghost" data-a="askno">Cancel</button></div></div>`;
-  if(tab==='arch'&&!NODES.length)h+=`<div class="bar">The archive is empty. <button class="btn sm" data-a="seed">Create starter folders</button></div>`}
+  if(tab==='arch'&&!NODES.length)h+=`<div class="bar">The archive is empty. <button class="btn sm" data-a="seed">Create starter folders</button></div>`;
+  if(tab==='arch'&&!V.id&&pending().length)h+=`<div class="bar"><button class="btn sm" data-a="import">Apply ${pending().length} updates</button> Adds, moves, and removes folders and documents to match your latest plan.</div>`}
  h+='<div class="list">'+(kids(V.id).map(n=>`<div class="fr" data-a="open" data-id="${n.id}">${IC[n.t]}<span class="n">${esc(n.n)}</span>${a?`${tab==='arch'?`<select data-lv="${n.id}" style="width:auto;margin:0;padding:.2rem .4rem;font-size:.8rem" title="Who can see this">${[['user','Everyone'],['bv','Black Vault and up'],['admin','Admin only']].map(o=>`<option value="${o[0]}" ${n.lv===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>`:''}<button class="btn ghost sm" data-a="ren" data-id="${n.id}">Rename</button><button class="btn danger sm" data-a="del" data-id="${n.id}">${del===n.id?'Sure?':'Remove'}</button>`:''}</div>`).join('')||'<div class="empty">This folder is empty.</div>')+'</div>';
  m.innerHTML=h;const i=$('an');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter')act('askok')}}}
 async function seed(){const w=writeBatch(fs);const go=(p,sp)=>{if(Array.isArray(sp))sp.forEach(n=>w.set(doc(collection(fs,'nodes')),{p,t:'doc',n,b:'',lv:'user'}));else for(const k in sp){const r=doc(collection(fs,'nodes'));w.set(r,{p,t:'folder',n:k,lv:'user'});go(r.id,sp[k])}};go(null,SPEC);await w.commit()}
@@ -184,19 +219,21 @@ async function act(a,id,t){try{
  else if(a==='edit')V.k='edit';
  else if(a==='save'){const d=get(V.id);await updateDoc(doc(fs,tab==='mine'?'mine':'nodes',d.id),{n:$('et').value.trim()||d.n,b:$('eb').value});V.k='doc'}
  else if(a==='seed')await seed();
+ else if(a==='import')await importDocs();
  else if(a==='appr')await updateDoc(doc(fs,'profiles',id),{status:'approved'});
  else if(a==='udel'){if(del==='u'+id){del=null;await deleteDoc(doc(fs,'profiles',id))}else del='u'+id}
 }catch(e){toast('Could not save: '+(e.code||e.message))}render()}
 $('main').onclick=e=>{const el=e.target.closest('[data-a]');if(!el)return;if(el.classList.contains('fr')&&e.target.closest('button,select'))return;act(el.dataset.a,el.dataset.id||null,el.dataset.t)};
 $('main').onchange=async e=>{const s=e.target;try{if(s.dataset.lv)await updateDoc(doc(fs,'nodes',s.dataset.lv),{lv:s.value});if(s.dataset.r)await updateDoc(doc(fs,'profiles',s.dataset.r),{role:s.value})}catch(x){toast('Could not save: '+(x.code||x.message))}};
 function users(){const pend=PROF.filter(x=>x.status==='pending'),ok=PROF.filter(x=>x.status!=='pending');
- $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div>`+(pend.length?`<div class="bar"><b>Pending approval</b>${pend.map(x=>`<div class="row" style="margin-top:.5rem"><span style="flex:1">${esc(x.username)}</span><button class="btn sm" data-a="appr" data-id="${x.id}">Approve</button><button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Deny'}</button></div>`).join('')}</div>`:'')+`<div class="scroll"><table><tr><th>User</th><th>Clearance</th><th></th></tr>${ok.map(x=>`<tr><td>${esc(x.username)}</td><td>${x.id===me.uid?LN[x.role]:`<select data-r="${x.id}" style="margin:0">${['user','bv','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${LN[r]}</option>`).join('')}</select>`}</td><td>${x.id===me.uid?'':`<button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Remove'}</button>`}</td></tr>`).join('')}</table></div>`}
+ const now=Date.now(),pm=Object.fromEntries(PRES.map(x=>[x.id,x.t?x.t.toMillis():now])),on=x=>{const q=PRES.find(y=>y.id===x.id);return !!q&&q.on===true&&now-pm[x.id]<180000},ago=x=>{const t=pm[x.id];if(t==null)return 'Offline';const m=Math.round((now-t)/60000);return 'Offline · '+(m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago')},online=ok.filter(on);
+ $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><p style="color:var(--mut)">Online now (${online.length}): ${online.length?online.map(x=>esc(x.username)).join(', '):'nobody'}</p>`+(pend.length?`<div class="bar"><b>Pending approval</b>${pend.map(x=>`<div class="row" style="margin-top:.5rem"><span style="flex:1">${esc(x.username)}</span><button class="btn sm" data-a="appr" data-id="${x.id}">Approve</button><button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Deny'}</button></div>`).join('')}</div>`:'')+`<div class="scroll"><table><tr><th>User</th><th>Clearance</th><th>Activity</th><th></th></tr>${ok.map(x=>`<tr><td>${esc(x.username)}</td><td>${x.id===me.uid?LN[x.role]:`<select data-r="${x.id}" style="margin:0">${['user','bv','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${LN[r]}</option>`).join('')}</select>`}</td><td>${on(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">'+(x.id===me.uid?'You':ago(x))+'</span>'}</td><td>${x.id===me.uid?'':`<button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Remove'}</button>`}</td></tr>`).join('')}</table></div>`}
 function pwView(){$('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Change password</b></div><div style="max-width:380px"><label>Current password</label><input id="pw0" type="password" autocomplete="current-password"><label>New password</label><input id="pw1" type="password" autocomplete="new-password"><label>Confirm new password</label><input id="pw2" type="password" autocomplete="new-password"><div class="msg" id="pwm"></div><button class="btn" id="pws">Update password</button></div>`;
  $('pws').onclick=async()=>{const m=$('pwm'),cur=$('pw0').value,nw=$('pw1').value;m.className='msg';
   if(!cur||!nw)return m.textContent='Fill in every field.';
   if(nw!==$('pw2').value)return m.textContent='New passwords do not match.';
   if(nw.length<6)return m.textContent='Use at least 6 characters.';
-  try{await reauthenticateWithCredential(auth.currentUser,EmailAuthProvider.credential(mail(me.u),cur));await updatePassword(auth.currentUser,nw);
+  try{await reauthenticateWithCredential(auth.currentUser,EmailAuthProvider.credential(auth.currentUser.email,cur));await updatePassword(auth.currentUser,nw);
    ['pw0','pw1','pw2'].forEach(i=>$(i).value='');m.className='msg ok';m.textContent='Password updated.'}
   catch(e){m.textContent=(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password')?'Current password is incorrect.':E(e)}}}
 </script></body></html>
