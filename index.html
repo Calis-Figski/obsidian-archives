@@ -2,10 +2,12 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FCP — Federal Containment and Protection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#1b1b20;--panel:#26262d;--panel2:#2f2f38;--line:#3d3d4a;--text:#e6e4ee;--mut:#9b98ab;--pur:#9d6bff;--pur2:#6d3fd1;--bad:#ff6b8a}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+#app{font:700 14.5px/1.6 'Orbitron','Segoe UI',system-ui,sans-serif}
 .hide{display:none!important}h1,h2,h3{margin:0 0 .5rem}
 button,input,select,textarea{font:inherit;color:var(--text)}
 input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:.55rem .7rem;margin:.25rem 0 .8rem}
@@ -29,8 +31,8 @@ footer{color:var(--mut);font-size:.85rem;padding:2rem 1.5rem;text-align:center;b
 #app header{position:sticky;top:0;z-index:2}
 main{max-width:960px;margin:0 auto;padding:1.2rem 1.5rem}
 .tabs{max-width:960px;margin:0 auto;padding:.8rem 1.5rem 0;display:flex;gap:.4rem}.tab{background:transparent;border:1px solid var(--line);border-radius:6px;padding:.4rem 1rem;cursor:pointer;color:var(--mut)}.tab.on{color:var(--text);border-color:var(--pur2);background:var(--panel2)}
-.crumbs{font-size:1.25rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
-.crumbs a{cursor:pointer;color:var(--mut)}.crumbs a:hover{color:var(--pur)}.crumbs b{font-weight:500}.crumbs i{color:var(--line);font-style:normal}
+.crumbs{font-size:1.1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
+.crumbs a{cursor:pointer;color:var(--mut)}.crumbs a:hover{color:var(--pur)}.crumbs b{font-weight:900}.crumbs i{color:var(--line);font-style:normal}
 .list{border-top:1px solid var(--line)}
 .fr{display:flex;align-items:center;gap:.8rem;padding:.7rem .6rem;border-bottom:1px solid var(--line);cursor:pointer}
 .fr:hover{background:var(--panel2)}.fr .n{flex:1}.fr svg{flex:none}
@@ -103,19 +105,19 @@ const auth=getAuth(app),fs=getFirestore(app);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LN={user:'User',bv:'Black Vault',admin:'Admin'},mail=u=>u.toLowerCase()+'@toa.local';
-const SPEC={'Agent Files':{'Field Agents':['Finch','Gray','Shard','Stray','Violet','Ward'],'Researchers':['The Glassmind','The Restorer','The Scribe','The Semiotician','The Synthetist']},'Compendium of the Archives':{'Archive Indices':{},'Logo':{},'Verified Resources':{}},'Entities':{'Ecliptic':{},'First Discovered':{},'Newly Discovered':{},'Shadow':{},'Symbol':{},'The Kenopses':{},'Triptych':{}},'Incident Reports':{},'Mission Reports':{}};
-const DOCS=[['Entities/Ecliptic','user',['AE-352']],['Entities/First Discovered','user',['AE-331','AE-332','AE-412-A/B','AE-777','AE-920','Summary[AE-227, AE-331, AE-412-A/B, AE-777]']],['Entities/Newly Discovered','user',['AE-175','AE-214','AE-909','AE-911','AE-923']],['Entities/Shadow','user',['AE-889','AE-913','AE-914','AE-915']],['Entities/Symbol','user',['AE-072','AE-702']],['Entities/The Kenopses','user',['AE-L0','AE-L1','AE-L2','AE-L4','AE-L7','AE-L10','AE-L15','AE-L18','AE-L22','AE-L23','AE-L29','AE-L31','AE-L48']],['Entities/Triptych','user',['AE-000','AE-601','AE-602','AE-603']],['Incident Reports','user',['Incident-01']],['Mission Reports','user',['AE-L0 -/- ECHO-0 Mission Report']],
+const SPEC={'Agent Files':{'Field Agents':['Finch','Gray','Shard','Stray','Violet','Ward'],'Researchers':['The Glassmind','The Restorer','The Scribe','The Semiotician','The Synthetist']},'Compendium of the Archives':{'Archive Indices':{},'Logo':{},'Verified Resources':{}},'Entities':{'Ecliptic':{},'First Discovered':{},'Newly Discovered':{},'Shadow':{},'Symbol':{},'Kenopses':{},'Triptych':{}},'Incident Reports':{},'Mission Reports':{}};
+const DOCS=[['Entities/Ecliptic','user',['AE-352']],['Entities/First Discovered','user',['AE-331','AE-332','AE-412-A/B','AE-777','AE-920']],['Entities/Newly Discovered','user',['AE-175','AE-214','AE-909','AE-911','AE-923']],['Entities/Shadow','user',['AE-889','AE-913','AE-914','AE-915']],['Entities/Symbol','user',['AE-072','AE-702']],['Entities/Kenopses','user',['AE-L0','AE-L1','AE-L2','AE-L4','AE-L7','AE-L10','AE-L15','AE-L18','AE-L22','AE-L23','AE-L29','AE-L31','AE-L48']],['Entities/Triptych','user',['AE-000','AE-601','AE-602','AE-603']],['Incident Reports','user',['Incident-01']],['Mission Reports','user',['AE-L0 -/- ECHO-0 Mission Report']],
 ['Agent Files/Personnel','bv',['Accomplice','Autist','Decipherer','FearWeaver','Keeper','Key','Nightshade','Pseudonymist','Seeker','Thinker','Watcher']],
 ['Incident Reports','bv',['Incident-01-BV','Incident-02-BV','Incident-03-BV','Incident-04-BV'],'user'],
 ['Departure','bv',['THKR - Departure']],
 ['Entities/Echo-Walker','bv',['AE-000X','Echo-Walker Dossier']],
-['Entities/The Kenopses','bv',['AE-L[REDACTED]','AE-L96']],
+['Entities/Kenopses','bv',['AE-L[REDACTED]','AE-L96']],
 ['Entities/Newly Discovered','bv',['AE-904']],
 ['Field Reports','bv',['Field Report-01','Field Report-02','Field Report-03','Field Report-04','Field Report-05']],
 ['Interviews','bv',['Council Analysis-01','Discussion of I-01','Interview w/Hive Mind','Witness Report-01','Wraith Debrief']],
 ['Orientation','bv',['Orientation']]];
 const MERGE=[['Entity Files','Entities']];
-const MOVES=['The Accomplice','The Autist','The Decipherer','The FearWeaver','The Keeper','The Key','The Nightshade','The Pseudonymist','The Seeker','The Thinker','The Watcher'].map(n=>['Agent Files/'+n,'Agent Files/Personnel','bv']).concat([['Entities/Kenopses/AE-L[REDACTED]','Entities/The Kenopses'],['Entities/Kenopses/AE-L96','Entities/The Kenopses'],['Entities/New/AE-904','Entities/Newly Discovered']]);
+const MOVES=['The Accomplice','The Autist','The Decipherer','The FearWeaver','The Keeper','The Key','The Nightshade','The Pseudonymist','The Seeker','The Thinker','The Watcher'].map(n=>['Agent Files/'+n,'Agent Files/Personnel','bv']).concat([['Entities/Kenopses/AE-L[REDACTED]','Entities/Kenopses'],['Entities/Kenopses/AE-L96','Entities/Kenopses'],['Entities/New/AE-904','Entities/Newly Discovered']]);
 const DROP=['Compendium of the Black Vault'],CLEAN=['Entities/Kenopses','Entities/New'];
 function pending(){const ops=[],N=NODES.map(n=>({...n})),real=id=>NODES.some(n=>n.id===id);
  const find=(p,seg,any)=>N.find(n=>n.p===p&&n.n===seg&&(any||n.t==='folder'));
@@ -135,6 +137,8 @@ async function importDocs(){const ops=pending();for(let i=0;i<ops.length;i+=400)
 const IC={folder:'<svg width="22" height="22" viewBox="0 0 24 24" fill="#9b98ab"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg>',doc:'<svg width="22" height="22" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="#9d6bff"/><path d="M8 9h8M8 13h6" stroke="#1b1b20" stroke-width="2"/></svg>'};
 const E=e=>({'auth/invalid-credential':'ACCESS DENIED: invalid credentials.','auth/user-not-found':'ACCESS DENIED: invalid credentials.','auth/wrong-password':'ACCESS DENIED: invalid credentials.','auth/email-already-in-use':'Username already exists.','auth/weak-password':'Password must be at least 6 characters.','auth/too-many-requests':'Too many attempts. Wait a few minutes and try again.','auth/network-request-failed':'Network error. Check your connection.'}[e.code]||('Error: '+(e.code||e.message)));
 let me=null,V={k:'browse',id:null},ask=null,del=null,tab='arch',unsubs=[],NODES=[],MINE=[],PROF=[],PRES=[],hb=null,busyReg=false,mode='login';
+let presUnsub=null;const allowOn=()=>!!me&&(me.role==='admin'||me.see===true),isOn=q=>q.on===true&&Date.now()-(q.t?q.t.toMillis():Date.now())<180000;
+function startPres(){if(presUnsub){presUnsub();presUnsub=null}PRES=[];if(!me||!allowOn())return;presUnsub=onSnapshot(collection(fs,'presence'),s=>{PRES=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err)}
 const pool=()=>tab==='mine'?MINE:NODES,get=id=>pool().find(x=>x.id===id);
 const nat=(a,b)=>{const x=a.toLowerCase().match(/\d+|\D+/g)||[],y=b.toLowerCase().match(/\d+|\D+/g)||[];
  for(let i=0;i<Math.min(x.length,y.length);i++){const p=x[i],q=y[i];if(p===q)continue;const pn=/^\d/.test(p),qn=/^\d/.test(q);
@@ -172,24 +176,25 @@ onAuthStateChanged(auth,async u=>{if(busyReg)return;stop();
  let s;try{s=await getDoc(doc(fs,'profiles',u.uid))}catch(e){await signOut(auth);msg('Could not load your account.');return}
  if(!s.exists()){await signOut(auth);msg('ACCESS DENIED: this account was removed.');return}
  const p=s.data();if(p.status!=='approved'){await signOut(auth);msg('ACCESS PENDING: awaiting admin approval.');return}
- me={uid:u.uid,u:p.username,role:p.role};$('lu').value=$('lp').value='';enter()});
-function beat(){if(!me)return;setDoc(doc(fs,'presence',me.uid),{username:me.u,role:me.role,t:serverTimestamp(),on:true}).catch(()=>{});if(me.role==='admin'&&V.k==='users')refresh()}
-function stop(){clearInterval(hb);unsubs.forEach(f=>f());unsubs=[];NODES=[];MINE=[];PROF=[];PRES=[]}
+ me={uid:u.uid,u:p.username,role:p.role,see:p.seeUsers===true};$('lu').value=$('lp').value='';enter()});
+function beat(){if(!me)return;setDoc(doc(fs,'presence',me.uid),{username:me.u,role:me.role,t:serverTimestamp(),on:true}).catch(()=>{});if(V.k==='users')refresh()}
+function stop(){clearInterval(hb);unsubs.forEach(f=>f());unsubs=[];if(presUnsub){presUnsub();presUnsub=null}NODES=[];MINE=[];PROF=[];PRES=[]}
 function enter(){stop();V={k:'browse',id:null};ask=del=null;tab='arch';
  $('who').textContent=me.u+' ['+LN[me.role]+']';$('usersBtn').classList.toggle('hide',me.role!=='admin');
  const lv=me.role==='admin'?['user','bv','admin']:me.role==='bv'?['user','bv']:['user'];
  unsubs.push(onSnapshot(query(collection(fs,'nodes'),where('lv','in',lv)),s=>{NODES=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
- if(me.role==='admin')unsubs.push(onSnapshot(collection(fs,'presence'),s=>{PRES=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
+ startPres();
  if(me.role==='admin')unsubs.push(onSnapshot(collection(fs,'profiles'),s=>{PROF=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  else unsubs.push(onSnapshot(query(collection(fs,'mine'),where('o','==',me.uid)),s=>{MINE=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
- unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{const p=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;enter()}},err));
+ unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{const p=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;me.see=p.seeUsers===true;enter();return}if((p.seeUsers===true)!==me.see){me.see=p.seeUsers===true;startPres();refresh()}},err));
  beat();hb=setInterval(beat,60000);show('app');render()}
 function refresh(){if(!me)return;const ae=document.activeElement;if(V.k==='edit'||V.k==='pw'||ask||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))return;render()}
 
 function crumbs(id){const t=trail(id);return `<div class="crumbs"><a data-a="go" data-id="">${tab==='mine'?'My Files':'TOA'}</a>${t.map((n,i)=>`<i>›</i>${i===t.length-1?`<b>${esc(n.n)}</b>`:`<a data-a="go" data-id="${n.id}">${esc(n.n)}</a>`}`).join('')}</div>`}
 function render(){if(!me)return;
- const np=PROF.filter(x=>x.status==='pending').length;$('usersBtn').textContent=np?'Users ('+np+')':'Users';
- $('tabs').innerHTML=(me.role==='admin'?[]:[['arch','Archives'],['mine','My Files']]).map(t=>`<button class="tab${tab===t[0]&&V.k!=='pw'?' on':''}" data-t2="${t[0]}">${t[1]}</button>`).join('');
+ const np=PROF.filter(x=>x.status==='pending').length;$('usersBtn').classList.toggle('hide',!allowOn());$('usersBtn').textContent=me.role==='admin'?(np?'Users ('+np+')':'Users'):'Users ('+PRES.filter(isOn).length+' online)';
+ $('tabs').innerHTML=(me.role==='admin'?[]:[['arch','Archives'],['mine','My Files']]).map(t=>`<button class="tab${tab===t[0]&&V.k!=='pw'&&V.k!=='users'?' on':''}" data-t2="${t[0]}">${t[1]}</button>`).join('');
+ if(V.k==='users'&&!allowOn())V={k:'browse',id:null};
  if(V.k==='users')return users();if(V.k==='pw')return pwView();
  if((V.k==='doc'||V.k==='edit')&&!get(V.id))V={k:'browse',id:null};
  if(V.k==='browse'&&V.id&&!get(V.id))V.id=null;
@@ -221,13 +226,15 @@ async function act(a,id,t){try{
  else if(a==='seed')await seed();
  else if(a==='import')await importDocs();
  else if(a==='appr')await updateDoc(doc(fs,'profiles',id),{status:'approved'});
- else if(a==='udel'){if(del==='u'+id){del=null;await deleteDoc(doc(fs,'profiles',id))}else del='u'+id}
+ else if(a==='udel'){if(del==='u'+id){del=null;await deleteDoc(doc(fs,'profiles',id));try{await deleteDoc(doc(fs,'presence',id))}catch(e){}}else del='u'+id}
 }catch(e){toast('Could not save: '+(e.code||e.message))}render()}
 $('main').onclick=e=>{const el=e.target.closest('[data-a]');if(!el)return;if(el.classList.contains('fr')&&e.target.closest('button,select'))return;act(el.dataset.a,el.dataset.id||null,el.dataset.t)};
-$('main').onchange=async e=>{const s=e.target;try{if(s.dataset.lv)await updateDoc(doc(fs,'nodes',s.dataset.lv),{lv:s.value});if(s.dataset.r)await updateDoc(doc(fs,'profiles',s.dataset.r),{role:s.value})}catch(x){toast('Could not save: '+(x.code||x.message))}};
-function users(){const pend=PROF.filter(x=>x.status==='pending'),ok=PROF.filter(x=>x.status!=='pending');
+$('main').onchange=async e=>{const s=e.target;try{if(s.dataset.lv)await updateDoc(doc(fs,'nodes',s.dataset.lv),{lv:s.value});if(s.dataset.r)await updateDoc(doc(fs,'profiles',s.dataset.r),{role:s.value});if(s.dataset.see)await updateDoc(doc(fs,'profiles',s.dataset.see),{seeUsers:s.value==='yes'})}catch(x){toast('Could not save: '+(x.code||x.message))}};
+function users(){if(me.role!=='admin')return usersRO();const pend=PROF.filter(x=>x.status==='pending'),ok=PROF.filter(x=>x.status!=='pending');
  const now=Date.now(),pm=Object.fromEntries(PRES.map(x=>[x.id,x.t?x.t.toMillis():now])),on=x=>{const q=PRES.find(y=>y.id===x.id);return !!q&&q.on===true&&now-pm[x.id]<180000},ago=x=>{const t=pm[x.id];if(t==null)return 'Offline';const m=Math.round((now-t)/60000);return 'Offline · '+(m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago')},online=ok.filter(on);
- $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><p style="color:var(--mut)">Online now (${online.length}): ${online.length?online.map(x=>esc(x.username)).join(', '):'nobody'}</p>`+(pend.length?`<div class="bar"><b>Pending approval</b>${pend.map(x=>`<div class="row" style="margin-top:.5rem"><span style="flex:1">${esc(x.username)}</span><button class="btn sm" data-a="appr" data-id="${x.id}">Approve</button><button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Deny'}</button></div>`).join('')}</div>`:'')+`<div class="scroll"><table><tr><th>User</th><th>Clearance</th><th>Activity</th><th></th></tr>${ok.map(x=>`<tr><td>${esc(x.username)}</td><td>${x.id===me.uid?LN[x.role]:`<select data-r="${x.id}" style="margin:0">${['user','bv','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${LN[r]}</option>`).join('')}</select>`}</td><td>${on(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">'+(x.id===me.uid?'You':ago(x))+'</span>'}</td><td>${x.id===me.uid?'':`<button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Remove'}</button>`}</td></tr>`).join('')}</table></div>`}
+ $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><p style="color:var(--mut)">Online now (${online.length}): ${online.length?online.map(x=>esc(x.username)).join(', '):'nobody'}</p>`+(pend.length?`<div class="bar"><b>Pending approval</b>${pend.map(x=>`<div class="row" style="margin-top:.5rem"><span style="flex:1">${esc(x.username)}</span><button class="btn sm" data-a="appr" data-id="${x.id}">Approve</button><button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Deny'}</button></div>`).join('')}</div>`:'')+`<div class="scroll"><table><tr><th>User</th><th>Clearance</th><th>Sees Users tab</th><th>Activity</th><th></th></tr>${ok.map(x=>`<tr><td>${esc(x.username)}</td><td>${x.id===me.uid?LN[x.role]:`<select data-r="${x.id}" style="margin:0">${['user','bv','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${LN[r]}</option>`).join('')}</select>`}</td><td>${x.role==='admin'?'<span style="color:var(--mut)">Always</span>':`<select data-see="${x.id}" style="margin:0"><option value="no" ${x.seeUsers===true?'':'selected'}>No</option><option value="yes" ${x.seeUsers===true?'selected':''}>Yes</option></select>`}</td><td>${on(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">'+(x.id===me.uid?'You':ago(x))+'</span>'}</td><td>${x.id===me.uid?'':`<button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Remove'}</button>`}</td></tr>`).join('')}</table></div>`}
+function usersRO(){const rows=PRES.slice().sort((a,b)=>a.username.localeCompare(b.username));
+ $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><div class="scroll"><table><tr><th>User</th><th>Status</th></tr>${rows.map(x=>`<tr><td>${esc(x.username)}${x.id===me.uid?' (you)':''}</td><td>${isOn(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">Offline</span>'}</td></tr>`).join('')}</table></div>`}
 function pwView(){$('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Change password</b></div><div style="max-width:380px"><label>Current password</label><input id="pw0" type="password" autocomplete="current-password"><label>New password</label><input id="pw1" type="password" autocomplete="new-password"><label>Confirm new password</label><input id="pw2" type="password" autocomplete="new-password"><div class="msg" id="pwm"></div><button class="btn" id="pws">Update password</button></div>`;
  $('pws').onclick=async()=>{const m=$('pwm'),cur=$('pw0').value,nw=$('pw1').value;m.className='msg';
   if(!cur||!nw)return m.textContent='Fill in every field.';
