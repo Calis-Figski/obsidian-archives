@@ -34,6 +34,7 @@ main{max-width:960px;margin:0 auto;padding:1.2rem 1.5rem}
 .crumbs{font-size:1.1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
 .crumbs a{cursor:pointer;color:var(--mut)}.crumbs a:hover{color:var(--pur)}.crumbs b{font-weight:900}.crumbs i{color:var(--line);font-style:normal}
 .list{border-top:1px solid var(--line)}
+.chatbox{height:55vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.6rem}.cm{padding:.5rem .7rem;margin:.4rem 0;border:1px solid var(--line);border-radius:8px;background:var(--bg)}.cm.mine{border-color:var(--pur2)}.ch{display:flex;gap:.6rem;align-items:center;font-size:.8rem}.ch b{color:var(--pur)}.ch span{color:var(--mut);flex:1}.ct{white-space:pre-wrap;word-break:break-word;margin-top:.2rem}.btn.alert{background:var(--pur2);box-shadow:0 0 10px var(--pur)}
 .fr{display:flex;align-items:center;gap:.8rem;padding:.7rem .6rem;border-bottom:1px solid var(--line);cursor:pointer}
 .fr:hover{background:var(--panel2)}.fr .n{flex:1}.fr svg{flex:none}
 .empty{color:var(--mut);padding:1.5rem .6rem}
@@ -92,14 +93,14 @@ details{background:var(--panel);border:1px solid var(--line);border-radius:8px;p
 
 <div id="app" class="hide">
 <header><div class="logo">THE <span>OBSIDIAN</span> ARCHIVES</div>
-<div class="row"><span id="who" style="color:var(--mut);font-size:.9rem"></span><button class="btn ghost" id="pwBtn">Password</button><button class="btn ghost hide" id="usersBtn">Users</button><button class="btn" id="logout">Log out</button></div></header>
+<div class="row"><span id="who" style="color:var(--mut);font-size:.9rem"></span><button class="btn ghost" id="pwBtn">Password</button><button class="btn ghost hide" id="usersBtn">Users</button><button class="btn ghost" id="chatBtn">Chat</button><button class="btn" id="logout">Log out</button></div></header>
 <div id="toast" class="hide" style="position:fixed;left:12px;bottom:12px;background:#7a2a42;padding:.6rem 1rem;border-radius:6px;max-width:80vw;z-index:9"></div>
 <div class="tabs" id="tabs"></div><main id="main"></main></div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {getFirestore,collection,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,query,where,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {getFirestore,collection,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyBOM2C2uTotbT4TpmyIDbbuZZuA_SyfY-o",authDomain:"obsidian-archives.firebaseapp.com",projectId:"obsidian-archives",storageBucket:"obsidian-archives.firebasestorage.app",messagingSenderId:"104220108252",appId:"1:104220108252:web:26e6af4d7f79215cf75b19"});
 const auth=getAuth(app),fs=getFirestore(app);
 const $=id=>document.getElementById(id);
@@ -137,7 +138,7 @@ async function importDocs(){const ops=pending();for(let i=0;i<ops.length;i+=400)
 const IC={folder:'<svg width="22" height="22" viewBox="0 0 24 24" fill="#9b98ab"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg>',doc:'<svg width="22" height="22" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3" fill="#9d6bff"/><path d="M8 9h8M8 13h6" stroke="#1b1b20" stroke-width="2"/></svg>'};
 const E=e=>({'auth/invalid-credential':'ACCESS DENIED: invalid credentials.','auth/user-not-found':'ACCESS DENIED: invalid credentials.','auth/wrong-password':'ACCESS DENIED: invalid credentials.','auth/email-already-in-use':'Username already exists.','auth/weak-password':'Password must be at least 6 characters.','auth/too-many-requests':'Too many attempts. Wait a few minutes and try again.','auth/network-request-failed':'Network error. Check your connection.'}[e.code]||('Error: '+(e.code||e.message)));
 let me=null,V={k:'browse',id:null},ask=null,del=null,tab='arch',unsubs=[],NODES=[],MINE=[],PROF=[],PRES=[],hb=null,busyReg=false,mode='login';
-let presUnsub=null;const allowOn=()=>!!me&&(me.role==='admin'||me.see===true),isOn=q=>q.on===true&&Date.now()-(q.t?q.t.toMillis():Date.now())<180000;
+let presUnsub=null,CHAT=[],lrMem=null;const allowOn=()=>!!me&&(me.role==='admin'||me.see===true),isOn=q=>q.on===true&&Date.now()-(q.t?q.t.toMillis():Date.now())<180000;
 function startPres(){if(presUnsub){presUnsub();presUnsub=null}PRES=[];if(!me||!allowOn())return;presUnsub=onSnapshot(collection(fs,'presence'),s=>{PRES=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err)}
 const pool=()=>tab==='mine'?MINE:NODES,get=id=>pool().find(x=>x.id===id);
 const nat=(a,b)=>{const x=a.toLowerCase().match(/\d+|\D+/g)||[],y=b.toLowerCase().match(/\d+|\D+/g)||[];
@@ -169,6 +170,7 @@ $('lgo').onclick=async()=>{const u=$('lu').value.trim(),p=$('lp').value;
 $('logout').onclick=async()=>{try{if(me)await setDoc(doc(fs,'presence',me.uid),{username:me.u,role:me.role,t:serverTimestamp(),on:false})}catch(e){}signOut(auth)};
 $('usersBtn').onclick=()=>{V={k:'users'};ask=del=null;render()};
 $('pwBtn').onclick=()=>{V={k:'pw'};ask=del=null;render()};
+$('chatBtn').onclick=()=>{V={k:'chat'};ask=del=null;render()};
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t2]');if(b){tab=b.dataset.t2;V={k:'browse',id:null};ask=del=null;render()}};
 
 onAuthStateChanged(auth,async u=>{if(busyReg)return;stop();
@@ -178,24 +180,25 @@ onAuthStateChanged(auth,async u=>{if(busyReg)return;stop();
  const p=s.data();if(p.status!=='approved'){await signOut(auth);msg('ACCESS PENDING: awaiting admin approval.');return}
  me={uid:u.uid,u:p.username,role:p.role,see:p.seeUsers===true};$('lu').value=$('lp').value='';enter()});
 function beat(){if(!me)return;setDoc(doc(fs,'presence',me.uid),{username:me.u,role:me.role,t:serverTimestamp(),on:true}).catch(()=>{});if(V.k==='users')refresh()}
-function stop(){clearInterval(hb);unsubs.forEach(f=>f());unsubs=[];if(presUnsub){presUnsub();presUnsub=null}NODES=[];MINE=[];PROF=[];PRES=[]}
+function stop(){clearInterval(hb);unsubs.forEach(f=>f());unsubs=[];if(presUnsub){presUnsub();presUnsub=null}NODES=[];MINE=[];PROF=[];PRES=[];CHAT=[];lrMem=null}
 function enter(){stop();V={k:'browse',id:null};ask=del=null;tab='arch';
  $('who').textContent=me.u+' ['+LN[me.role]+']';$('usersBtn').classList.toggle('hide',me.role!=='admin');
  const lv=me.role==='admin'?['user','bv','admin']:me.role==='bv'?['user','bv']:['user'];
  unsubs.push(onSnapshot(query(collection(fs,'nodes'),where('lv','in',lv)),s=>{NODES=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  startPres();
+ unsubs.push(onSnapshot(query(collection(fs,'chat'),orderBy('t','desc'),limit(100)),s=>{CHAT=s.docs.map(d=>({id:d.id,...d.data()})).reverse();badge();if(V.k==='chat')updateChat()},err));
  if(me.role==='admin')unsubs.push(onSnapshot(collection(fs,'profiles'),s=>{PROF=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  else unsubs.push(onSnapshot(query(collection(fs,'mine'),where('o','==',me.uid)),s=>{MINE=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{const p=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;me.see=p.seeUsers===true;enter();return}if((p.seeUsers===true)!==me.see){me.see=p.seeUsers===true;startPres();refresh()}},err));
  beat();hb=setInterval(beat,60000);show('app');render()}
-function refresh(){if(!me)return;const ae=document.activeElement;if(V.k==='edit'||V.k==='pw'||ask||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))return;render()}
+function refresh(){if(!me)return;if(V.k==='chat'){updateChat();return}const ae=document.activeElement;if(V.k==='edit'||V.k==='pw'||ask||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))return;render()}
 
 function crumbs(id){const t=trail(id);return `<div class="crumbs"><a data-a="go" data-id="">${tab==='mine'?'My Files':'TOA'}</a>${t.map((n,i)=>`<i>›</i>${i===t.length-1?`<b>${esc(n.n)}</b>`:`<a data-a="go" data-id="${n.id}">${esc(n.n)}</a>`}`).join('')}</div>`}
 function render(){if(!me)return;
- const np=PROF.filter(x=>x.status==='pending').length;$('usersBtn').classList.toggle('hide',!allowOn());$('usersBtn').textContent=me.role==='admin'?(np?'Users ('+np+')':'Users'):'Users ('+PRES.filter(isOn).length+' online)';
- $('tabs').innerHTML=(me.role==='admin'?[]:[['arch','Archives'],['mine','My Files']]).map(t=>`<button class="tab${tab===t[0]&&V.k!=='pw'&&V.k!=='users'?' on':''}" data-t2="${t[0]}">${t[1]}</button>`).join('');
+ const np=PROF.filter(x=>x.status==='pending').length;badge();$('usersBtn').classList.toggle('hide',!allowOn());$('usersBtn').textContent=me.role==='admin'?(np?'Users ('+np+')':'Users'):'Users ('+PRES.filter(isOn).length+' online)';
+ $('tabs').innerHTML=(me.role==='admin'?[]:[['arch','Archives'],['mine','My Files']]).map(t=>`<button class="tab${tab===t[0]&&V.k!=='pw'&&V.k!=='users'&&V.k!=='chat'?' on':''}" data-t2="${t[0]}">${t[1]}</button>`).join('');
  if(V.k==='users'&&!allowOn())V={k:'browse',id:null};
- if(V.k==='users')return users();if(V.k==='pw')return pwView();
+ if(V.k==='users')return users();if(V.k==='pw')return pwView();if(V.k==='chat')return chatView();
  if((V.k==='doc'||V.k==='edit')&&!get(V.id))V={k:'browse',id:null};
  if(V.k==='browse'&&V.id&&!get(V.id))V.id=null;
  const a=me.role==='admin'||tab==='mine',m=$('main');
@@ -225,6 +228,7 @@ async function act(a,id,t){try{
  else if(a==='save'){const d=get(V.id);await updateDoc(doc(fs,tab==='mine'?'mine':'nodes',d.id),{n:$('et').value.trim()||d.n,b:$('eb').value});V.k='doc'}
  else if(a==='seed')await seed();
  else if(a==='import')await importDocs();
+ else if(a==='cdel')await deleteDoc(doc(fs,'chat',id));
  else if(a==='appr')await updateDoc(doc(fs,'profiles',id),{status:'approved'});
  else if(a==='udel'){if(del==='u'+id){del=null;await deleteDoc(doc(fs,'profiles',id));try{await deleteDoc(doc(fs,'presence',id))}catch(e){}}else del='u'+id}
 }catch(e){toast('Could not save: '+(e.code||e.message))}render()}
@@ -235,6 +239,20 @@ function users(){if(me.role!=='admin')return usersRO();const pend=PROF.filter(x=
  $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><p style="color:var(--mut)">Online now (${online.length}): ${online.length?online.map(x=>esc(x.username)).join(', '):'nobody'}</p>`+(pend.length?`<div class="bar"><b>Pending approval</b>${pend.map(x=>`<div class="row" style="margin-top:.5rem"><span style="flex:1">${esc(x.username)}</span><button class="btn sm" data-a="appr" data-id="${x.id}">Approve</button><button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Deny'}</button></div>`).join('')}</div>`:'')+`<div class="scroll"><table><tr><th>User</th><th>Clearance</th><th>Sees Users tab</th><th>Activity</th><th></th></tr>${ok.map(x=>`<tr><td>${esc(x.username)}</td><td>${x.id===me.uid?LN[x.role]:`<select data-r="${x.id}" style="margin:0">${['user','bv','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${LN[r]}</option>`).join('')}</select>`}</td><td>${x.role==='admin'?'<span style="color:var(--mut)">Always</span>':`<select data-see="${x.id}" style="margin:0"><option value="no" ${x.seeUsers===true?'':'selected'}>No</option><option value="yes" ${x.seeUsers===true?'selected':''}>Yes</option></select>`}</td><td>${on(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">'+(x.id===me.uid?'You':ago(x))+'</span>'}</td><td>${x.id===me.uid?'':`<button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Remove'}</button>`}</td></tr>`).join('')}</table></div>`}
 function usersRO(){const rows=PRES.slice().sort((a,b)=>a.username.localeCompare(b.username));
  $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><div class="scroll"><table><tr><th>User</th><th>Status</th></tr>${rows.map(x=>`<tr><td>${esc(x.username)}${x.id===me.uid?' (you)':''}</td><td>${isOn(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">Offline</span>'}</td></tr>`).join('')}</table></div>`}
+const rkey=()=>'toa_chat_read_'+me.uid,tm=m=>m.t?m.t.toMillis():Date.now();
+function lastRead(){try{let v=localStorage.getItem(rkey());if(v===null){v=String(Date.now());localStorage.setItem(rkey(),v)}return Math.max(+v,lrMem||0)}catch(e){if(lrMem===null)lrMem=Date.now();return lrMem}}
+function markRead(){if(!me||!CHAT.length)return;const mx=Math.max(lastRead(),...CHAT.map(tm));lrMem=mx;try{localStorage.setItem(rkey(),String(mx))}catch(e){}badge()}
+function badge(){if(!me)return;const n=V.k==='chat'?0:CHAT.filter(m=>m.uid!==me.uid&&tm(m)>lastRead()).length,b=$('chatBtn');b.textContent=n?'Chat ('+n+')':'Chat';b.classList.toggle('alert',n>0);document.title=(n?'('+n+') ':'')+'FCP — Federal Containment and Protection'}
+const fmt=ms=>{const d=new Date(ms),t=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});return d.toDateString()===new Date().toDateString()?t:d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+t};
+function chatView(){if(!$('chatText')){
+  $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Chat</b></div><div id="chatBox" class="chatbox"></div><div class="row" style="margin-top:.8rem;flex-wrap:nowrap"><input id="chatText" maxlength="500" placeholder="Message everyone..." autocomplete="off" style="margin:0"><button class="btn" id="chatSend">Send</button></div>`;
+  $('chatSend').onclick=sendChat;$('chatText').onkeydown=e=>{if(e.key==='Enter')sendChat()};$('chatText').focus()}
+ updateChat(true)}
+function updateChat(force){const b=$('chatBox');if(!b)return;const near=force||b.scrollHeight-b.scrollTop-b.clientHeight<80;
+ b.innerHTML=CHAT.length?CHAT.map(m=>`<div class="cm${m.uid===me.uid?' mine':''}"><div class="ch"><b>${esc(m.u)}</b><span>${fmt(tm(m))}</span>${me.role==='admin'?`<button class="btn danger sm" data-a="cdel" data-id="${m.id}">×</button>`:''}</div><div class="ct">${esc(m.text)}</div></div>`).join(''):'<div class="empty">No messages yet. Say something.</div>';
+ if(near)b.scrollTop=b.scrollHeight;markRead()}
+async function sendChat(){const i=$('chatText'),v=i.value.trim();if(!v)return;i.value='';
+ try{await addDoc(collection(fs,'chat'),{u:me.u,uid:me.uid,text:v.slice(0,500),t:serverTimestamp()})}catch(e){i.value=v;toast('Could not send: '+(e.code||e.message))}}
 function pwView(){$('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Change password</b></div><div style="max-width:380px"><label>Current password</label><input id="pw0" type="password" autocomplete="current-password"><label>New password</label><input id="pw1" type="password" autocomplete="new-password"><label>Confirm new password</label><input id="pw2" type="password" autocomplete="new-password"><div class="msg" id="pwm"></div><button class="btn" id="pws">Update password</button></div>`;
  $('pws').onclick=async()=>{const m=$('pwm'),cur=$('pw0').value,nw=$('pw1').value;m.className='msg';
   if(!cur||!nw)return m.textContent='Fill in every field.';
