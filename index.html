@@ -34,7 +34,7 @@ main{max-width:960px;margin:0 auto;padding:1.2rem 1.5rem}
 .crumbs{font-size:1.1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
 .crumbs a{cursor:pointer;color:var(--mut)}.crumbs a:hover{color:var(--pur)}.crumbs b{font-weight:900}.crumbs i{color:var(--line);font-style:normal}
 .list{border-top:1px solid var(--line)}
-.chatbox{height:55vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.6rem}.cm{padding:.5rem .7rem;margin:.4rem 0;border:1px solid var(--line);border-radius:8px;background:var(--bg)}.cm.mine{border-color:var(--pur2)}.ch{display:flex;gap:.6rem;align-items:center;font-size:.8rem}.ch b{color:var(--pur)}.ch span{color:var(--mut);flex:1}.ct{white-space:pre-wrap;word-break:break-word;margin-top:.2rem}.btn.alert{background:var(--pur2);box-shadow:0 0 10px var(--pur)}
+.chatbox{height:55vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.6rem}.cm{padding:.5rem .7rem;margin:.4rem 0;border:1px solid var(--line);border-radius:8px;background:var(--bg)}.cm.mine{border-color:var(--pur2)}.ch{display:flex;gap:.6rem;align-items:center;font-size:.8rem}.ch b{color:var(--pur)}.ch span{color:var(--mut);flex:1}.ct{white-space:pre-wrap;word-break:break-word;margin-top:.2rem}.btn.alert{background:var(--pur2);box-shadow:0 0 10px var(--pur)}input:disabled,button:disabled{opacity:.5;cursor:not-allowed}
 .fr{display:flex;align-items:center;gap:.8rem;padding:.7rem .6rem;border-bottom:1px solid var(--line);cursor:pointer}
 .fr:hover{background:var(--panel2)}.fr .n{flex:1}.fr svg{flex:none}
 .empty{color:var(--mut);padding:1.5rem .6rem}
@@ -178,7 +178,7 @@ onAuthStateChanged(auth,async u=>{if(busyReg)return;stop();
  let s;try{s=await getDoc(doc(fs,'profiles',u.uid))}catch(e){await signOut(auth);msg('Could not load your account.');return}
  if(!s.exists()){await signOut(auth);msg('ACCESS DENIED: this account was removed.');return}
  const p=s.data();if(p.status!=='approved'){await signOut(auth);msg('ACCESS PENDING: awaiting admin approval.');return}
- me={uid:u.uid,u:p.username,role:p.role,see:p.seeUsers===true};$('lu').value=$('lp').value='';enter()});
+ me={uid:u.uid,u:p.username,role:p.role,see:p.seeUsers===true,nochat:p.noChat===true&&p.role!=='admin'};$('lu').value=$('lp').value='';enter()});
 function beat(){if(!me)return;setDoc(doc(fs,'presence',me.uid),{username:me.u,role:me.role,t:serverTimestamp(),on:true}).catch(()=>{});if(V.k==='users')refresh()}
 function stop(){clearInterval(hb);unsubs.forEach(f=>f());unsubs=[];if(presUnsub){presUnsub();presUnsub=null}NODES=[];MINE=[];PROF=[];PRES=[];CHAT=[];lrMem=null}
 function enter(){stop();V={k:'browse',id:null};ask=del=null;tab='arch';
@@ -189,7 +189,7 @@ function enter(){stop();V={k:'browse',id:null};ask=del=null;tab='arch';
  unsubs.push(onSnapshot(query(collection(fs,'chat'),orderBy('t','desc'),limit(100)),s=>{CHAT=s.docs.map(d=>({id:d.id,...d.data()})).reverse();badge();if(V.k==='chat')updateChat()},err));
  if(me.role==='admin')unsubs.push(onSnapshot(collection(fs,'profiles'),s=>{PROF=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  else unsubs.push(onSnapshot(query(collection(fs,'mine'),where('o','==',me.uid)),s=>{MINE=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
- unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{const p=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;me.see=p.seeUsers===true;enter();return}if((p.seeUsers===true)!==me.see){me.see=p.seeUsers===true;startPres();refresh()}},err));
+ unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{const p=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;me.see=p.seeUsers===true;me.nochat=p.noChat===true&&p.role!=='admin';enter();return}if((p.seeUsers===true)!==me.see){me.see=p.seeUsers===true;startPres();refresh()}const nc=p.noChat===true&&p.role!=='admin';if(nc!==me.nochat){me.nochat=nc;chatLock()}},err));
  beat();hb=setInterval(beat,60000);show('app');render()}
 function refresh(){if(!me)return;if(V.k==='chat'){updateChat();return}const ae=document.activeElement;if(V.k==='edit'||V.k==='pw'||ask||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))return;render()}
 
@@ -219,13 +219,13 @@ async function act(a,id,t){try{
  else if(a==='ren')ask={id};
  else if(a==='askno')ask=null;
  else if(a==='askok'){const v=$('an').value.trim();if(!v)return;const c=tab==='mine'?'mine':'nodes';
-  if(ask.id)await updateDoc(doc(fs,c,ask.id),{n:v});
-  else await addDoc(collection(fs,c),tab==='mine'?{p:V.id,t:ask.t,n:v,b:'',o:me.uid}:{p:V.id,t:ask.t,n:v,b:'',lv:'user'});
+  if(ask.id)await updateDoc(doc(fs,c,ask.id),tab==='mine'?{n:v,m:serverTimestamp()}:{n:v});
+  else await addDoc(collection(fs,c),tab==='mine'?{p:V.id,t:ask.t,n:v,b:'',o:me.uid,c:serverTimestamp(),m:serverTimestamp()}:{p:V.id,t:ask.t,n:v,b:'',lv:'user'});
   ask=null}
  else if(a==='del'){if(del===id){const c=tab==='mine'?'mine':'nodes',rm=new Set([id]);let ch=true;while(ch){ch=false;pool().forEach(n=>{if(rm.has(n.p)&&!rm.has(n.id)){rm.add(n.id);ch=true}})}
    const w=writeBatch(fs);rm.forEach(i=>w.delete(doc(fs,c,i)));del=null;await w.commit()}else del=id}
  else if(a==='edit')V.k='edit';
- else if(a==='save'){const d=get(V.id);await updateDoc(doc(fs,tab==='mine'?'mine':'nodes',d.id),{n:$('et').value.trim()||d.n,b:$('eb').value});V.k='doc'}
+ else if(a==='save'){const d=get(V.id);await updateDoc(doc(fs,tab==='mine'?'mine':'nodes',d.id),{n:$('et').value.trim()||d.n,b:$('eb').value,...(tab==='mine'?{m:serverTimestamp()}:{})});V.k='doc'}
  else if(a==='seed')await seed();
  else if(a==='import')await importDocs();
  else if(a==='cdel')await deleteDoc(doc(fs,'chat',id));
@@ -233,10 +233,10 @@ async function act(a,id,t){try{
  else if(a==='udel'){if(del==='u'+id){del=null;await deleteDoc(doc(fs,'profiles',id));try{await deleteDoc(doc(fs,'presence',id))}catch(e){}}else del='u'+id}
 }catch(e){toast('Could not save: '+(e.code||e.message))}render()}
 $('main').onclick=e=>{const el=e.target.closest('[data-a]');if(!el)return;if(el.classList.contains('fr')&&e.target.closest('button,select'))return;act(el.dataset.a,el.dataset.id||null,el.dataset.t)};
-$('main').onchange=async e=>{const s=e.target;try{if(s.dataset.lv)await updateDoc(doc(fs,'nodes',s.dataset.lv),{lv:s.value});if(s.dataset.r)await updateDoc(doc(fs,'profiles',s.dataset.r),{role:s.value});if(s.dataset.see)await updateDoc(doc(fs,'profiles',s.dataset.see),{seeUsers:s.value==='yes'})}catch(x){toast('Could not save: '+(x.code||x.message))}};
+$('main').onchange=async e=>{const s=e.target;try{if(s.dataset.lv)await updateDoc(doc(fs,'nodes',s.dataset.lv),{lv:s.value});if(s.dataset.r)await updateDoc(doc(fs,'profiles',s.dataset.r),{role:s.value});if(s.dataset.see)await updateDoc(doc(fs,'profiles',s.dataset.see),{seeUsers:s.value==='yes'});if(s.dataset.chat)await updateDoc(doc(fs,'profiles',s.dataset.chat),{noChat:s.value==='no'})}catch(x){toast('Could not save: '+(x.code||x.message))}};
 function users(){if(me.role!=='admin')return usersRO();const pend=PROF.filter(x=>x.status==='pending'),ok=PROF.filter(x=>x.status!=='pending');
  const now=Date.now(),pm=Object.fromEntries(PRES.map(x=>[x.id,x.t?x.t.toMillis():now])),on=x=>{const q=PRES.find(y=>y.id===x.id);return !!q&&q.on===true&&now-pm[x.id]<180000},ago=x=>{const t=pm[x.id];if(t==null)return 'Offline';const m=Math.round((now-t)/60000);return 'Offline · '+(m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago')},online=ok.filter(on);
- $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><p style="color:var(--mut)">Online now (${online.length}): ${online.length?online.map(x=>esc(x.username)).join(', '):'nobody'}</p>`+(pend.length?`<div class="bar"><b>Pending approval</b>${pend.map(x=>`<div class="row" style="margin-top:.5rem"><span style="flex:1">${esc(x.username)}</span><button class="btn sm" data-a="appr" data-id="${x.id}">Approve</button><button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Deny'}</button></div>`).join('')}</div>`:'')+`<div class="scroll"><table><tr><th>User</th><th>Clearance</th><th>Sees Users tab</th><th>Activity</th><th></th></tr>${ok.map(x=>`<tr><td>${esc(x.username)}</td><td>${x.id===me.uid?LN[x.role]:`<select data-r="${x.id}" style="margin:0">${['user','bv','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${LN[r]}</option>`).join('')}</select>`}</td><td>${x.role==='admin'?'<span style="color:var(--mut)">Always</span>':`<select data-see="${x.id}" style="margin:0"><option value="no" ${x.seeUsers===true?'':'selected'}>No</option><option value="yes" ${x.seeUsers===true?'selected':''}>Yes</option></select>`}</td><td>${on(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">'+(x.id===me.uid?'You':ago(x))+'</span>'}</td><td>${x.id===me.uid?'':`<button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Remove'}</button>`}</td></tr>`).join('')}</table></div>`}
+ $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><p style="color:var(--mut)">Online now (${online.length}): ${online.length?online.map(x=>esc(x.username)).join(', '):'nobody'}</p>`+(pend.length?`<div class="bar"><b>Pending approval</b>${pend.map(x=>`<div class="row" style="margin-top:.5rem"><span style="flex:1">${esc(x.username)}</span><button class="btn sm" data-a="appr" data-id="${x.id}">Approve</button><button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Deny'}</button></div>`).join('')}</div>`:'')+`<div class="scroll"><table><tr><th>User</th><th>Clearance</th><th>Sees Users tab</th><th>Can chat</th><th>Activity</th><th></th></tr>${ok.map(x=>`<tr><td>${esc(x.username)}</td><td>${x.id===me.uid?LN[x.role]:`<select data-r="${x.id}" style="margin:0">${['user','bv','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${LN[r]}</option>`).join('')}</select>`}</td><td>${x.role==='admin'?'<span style="color:var(--mut)">Always</span>':`<select data-see="${x.id}" style="margin:0"><option value="no" ${x.seeUsers===true?'':'selected'}>No</option><option value="yes" ${x.seeUsers===true?'selected':''}>Yes</option></select>`}</td><td>${x.role==='admin'?'<span style="color:var(--mut)">Always</span>':`<select data-chat="${x.id}" style="margin:0"><option value="yes" ${x.noChat===true?'':'selected'}>Yes</option><option value="no" ${x.noChat===true?'selected':''}>No</option></select>`}</td><td>${on(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">'+(x.id===me.uid?'You':ago(x))+'</span>'}</td><td>${x.id===me.uid?'':`<button class="btn danger sm" data-a="udel" data-id="${x.id}">${del==='u'+x.id?'Sure?':'Remove'}</button>`}</td></tr>`).join('')}</table></div>`}
 function usersRO(){const rows=PRES.slice().sort((a,b)=>a.username.localeCompare(b.username));
  $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Users</b></div><div class="scroll"><table><tr><th>User</th><th>Status</th></tr>${rows.map(x=>`<tr><td>${esc(x.username)}${x.id===me.uid?' (you)':''}</td><td>${isOn(x)?'<span style="color:#7be0a4">● Online</span>':'<span style="color:var(--mut)">Offline</span>'}</td></tr>`).join('')}</table></div>`}
 const rkey=()=>'toa_chat_read_'+me.uid,tm=m=>m.t?m.t.toMillis():Date.now();
@@ -245,13 +245,14 @@ function markRead(){if(!me||!CHAT.length)return;const mx=Math.max(lastRead(),...
 function badge(){if(!me)return;const n=V.k==='chat'?0:CHAT.filter(m=>m.uid!==me.uid&&tm(m)>lastRead()).length,b=$('chatBtn');b.textContent=n?'Chat ('+n+')':'Chat';b.classList.toggle('alert',n>0);document.title=(n?'('+n+') ':'')+'FCP — Federal Containment and Protection'}
 const fmt=ms=>{const d=new Date(ms),t=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});return d.toDateString()===new Date().toDateString()?t:d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+t};
 function chatView(){if(!$('chatText')){
-  $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Chat</b></div><div id="chatBox" class="chatbox"></div><div class="row" style="margin-top:.8rem;flex-wrap:nowrap"><input id="chatText" maxlength="500" placeholder="Message everyone..." autocomplete="off" style="margin:0"><button class="btn" id="chatSend">Send</button></div>`;
+  $('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Chat</b></div><div id="chatBox" class="chatbox"></div><div class="row" style="margin-top:.8rem;flex-wrap:nowrap"><input id="chatText" maxlength="500" placeholder="Message everyone..." autocomplete="off" style="margin:0"><button class="btn" id="chatSend">Send</button></div><p id="chatNote" class="hide" style="color:var(--bad);margin:.5rem 0 0;font-size:.85rem">An admin has turned off your ability to send messages. You can still read the chat.</p>`;
   $('chatSend').onclick=sendChat;$('chatText').onkeydown=e=>{if(e.key==='Enter')sendChat()};$('chatText').focus()}
- updateChat(true)}
+ chatLock();updateChat(true)}
 function updateChat(force){const b=$('chatBox');if(!b)return;const near=force||b.scrollHeight-b.scrollTop-b.clientHeight<80;
  b.innerHTML=CHAT.length?CHAT.map(m=>`<div class="cm${m.uid===me.uid?' mine':''}"><div class="ch"><b>${esc(m.u)}</b><span>${fmt(tm(m))}</span>${me.role==='admin'?`<button class="btn danger sm" data-a="cdel" data-id="${m.id}">×</button>`:''}</div><div class="ct">${esc(m.text)}</div></div>`).join(''):'<div class="empty">No messages yet. Say something.</div>';
  if(near)b.scrollTop=b.scrollHeight;markRead()}
-async function sendChat(){const i=$('chatText'),v=i.value.trim();if(!v)return;i.value='';
+function chatLock(){const i=$('chatText'),b=$('chatSend'),n=$('chatNote');if(!i)return;i.disabled=b.disabled=!!me.nochat;i.placeholder=me.nochat?'Sending is turned off for your account':'Message everyone...';n.classList.toggle('hide',!me.nochat)}
+async function sendChat(){if(me.nochat)return;const i=$('chatText'),v=i.value.trim();if(!v)return;i.value='';
  try{await addDoc(collection(fs,'chat'),{u:me.u,uid:me.uid,text:v.slice(0,500),t:serverTimestamp()})}catch(e){i.value=v;toast('Could not send: '+(e.code||e.message))}}
 function pwView(){$('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Change password</b></div><div style="max-width:380px"><label>Current password</label><input id="pw0" type="password" autocomplete="current-password"><label>New password</label><input id="pw1" type="password" autocomplete="new-password"><label>Confirm new password</label><input id="pw2" type="password" autocomplete="new-password"><div class="msg" id="pwm"></div><button class="btn" id="pws">Update password</button></div>`;
  $('pws').onclick=async()=>{const m=$('pwm'),cur=$('pw0').value,nw=$('pw1').value;m.className='msg';
