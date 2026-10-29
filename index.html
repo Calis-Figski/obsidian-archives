@@ -46,7 +46,13 @@ table{width:100%;border-collapse:collapse}td,th{padding:.4rem;border-bottom:1px 
 .num{display:inline-block;width:1.8rem;height:1.8rem;line-height:1.8rem;text-align:center;border-radius:50%;background:var(--pur2);margin-bottom:.5rem}
 ul.tips{color:var(--mut);padding-left:1.2rem}ul.tips li{margin:.4rem 0}
 details{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.7rem 1rem;margin:.5rem 0}summary{cursor:pointer;font-weight:600}details p{color:var(--mut);margin:.6rem 0 0}
-</style></head><body>
+.doc{font:400 15.5px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;max-width:78ch}
+textarea{font:400 14.5px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+.sn{display:block;color:var(--mut);font:400 .82rem/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.xr{color:var(--pur);cursor:pointer;border-bottom:1px dotted var(--pur)}.xr:hover{color:var(--text)}
+mark{background:var(--pur2);color:var(--text);border-radius:3px;padding:0 .15em}
+</style>
+</head><body>
 
 <div id="cover">
 <header><div class="logo">F<span>C</span>P</div><nav style="color:var(--mut);font-size:.9rem">Federal Containment and Protection</nav></header>
@@ -93,7 +99,7 @@ details{background:var(--panel);border:1px solid var(--line);border-radius:8px;p
 
 <div id="app" class="hide">
 <header><div class="logo">THE <span>OBSIDIAN</span> ARCHIVES</div>
-<div class="row"><span id="who" style="color:var(--mut);font-size:.9rem"></span><button class="btn ghost" id="pwBtn">Password</button><button class="btn ghost hide" id="usersBtn">Users</button><button class="btn ghost" id="chatBtn">Chat</button><button class="btn" id="logout">Log out</button></div></header>
+<div class="row"><span id="who" style="color:var(--mut);font-size:.9rem"></span><button class="btn ghost" id="pwBtn">Password</button><button class="btn ghost hide" id="usersBtn">Users</button><button class="btn ghost hide" id="exportBtn">Export</button><button class="btn ghost" id="chatBtn">Chat</button><button class="btn" id="logout">Log out</button></div></header>
 <div id="toast" class="hide" style="position:fixed;left:12px;bottom:12px;background:#7a2a42;padding:.6rem 1rem;border-radius:6px;max-width:80vw;z-index:9"></div>
 <div class="tabs" id="tabs"></div><main id="main"></main></div>
 
@@ -189,13 +195,13 @@ function enter(){stop();V={k:'browse',id:null};ask=del=null;tab='arch';
  unsubs.push(onSnapshot(query(collection(fs,'chat'),orderBy('t','desc'),limit(100)),s=>{CHAT=s.docs.map(d=>({id:d.id,...d.data()})).reverse();badge();if(V.k==='chat')updateChat()},err));
  if(me.role==='admin')unsubs.push(onSnapshot(collection(fs,'profiles'),s=>{PROF=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
  else unsubs.push(onSnapshot(query(collection(fs,'mine'),where('o','==',me.uid)),s=>{MINE=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},err));
- unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{const p=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;me.see=p.seeUsers===true;me.nochat=p.noChat===true&&p.role!=='admin';enter();return}if((p.seeUsers===true)!==me.see){me.see=p.seeUsers===true;startPres();refresh()}const nc=p.noChat===true&&p.role!=='admin';if(nc!==me.nochat){me.nochat=nc;chatLock()}},err));
+ unsubs.push(onSnapshot(doc(fs,'profiles',me.uid),s=>{constp=s.data();if(!p||p.status!=='approved'){signOut(auth);return}if(p.role!==me.role){me.role=p.role;me.see=p.seeUsers===true;me.nochat=p.noChat===true&&p.role!=='admin';enter();return}if((p.seeUsers===true)!==me.see){me.see=p.seeUsers===true;startPres();refresh()}const nc=p.noChat===true&&p.role!=='admin';if(nc!==me.nochat){me.nochat=nc;chatLock()}},err));
  beat();hb=setInterval(beat,60000);show('app');render()}
 function refresh(){if(!me)return;if(V.k==='chat'){updateChat();return}const ae=document.activeElement;if(V.k==='edit'||V.k==='pw'||ask||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)))return;render()}
 
 function crumbs(id){const t=trail(id);return `<div class="crumbs"><a data-a="go" data-id="">${tab==='mine'?'My Files':'TOA'}</a>${t.map((n,i)=>`<i>›</i>${i===t.length-1?`<b>${esc(n.n)}</b>`:`<a data-a="go" data-id="${n.id}">${esc(n.n)}</a>`}`).join('')}</div>`}
 function render(){if(!me)return;
- const np=PROF.filter(x=>x.status==='pending').length;badge();$('usersBtn').classList.toggle('hide',!allowOn());$('usersBtn').textContent=me.role==='admin'?(np?'Users ('+np+')':'Users'):'Users ('+PRES.filter(isOn).length+' online)';
+ const np=PROF.filter(x=>x.status==='pending').length;badge();$('usersBtn').classList.toggle('hide',!allowOn());$('exportBtn').classList.toggle('hide',me.role!=='admin');$('usersBtn').textContent=me.role==='admin'?(np?'Users ('+np+')':'Users'):'Users ('+PRES.filter(isOn).length+' online)';
  $('tabs').innerHTML=(me.role==='admin'?[]:[['arch','Archives'],['mine','My Files']]).map(t=>`<button class="tab${tab===t[0]&&V.k!=='pw'&&V.k!=='users'&&V.k!=='chat'?' on':''}" data-t2="${t[0]}">${t[1]}</button>`).join('');
  if(V.k==='users'&&!allowOn())V={k:'browse',id:null};
  if(V.k==='users')return users();if(V.k==='pw')return pwView();if(V.k==='chat')return chatView();
@@ -203,17 +209,36 @@ function render(){if(!me)return;
  if(V.k==='browse'&&V.id&&!get(V.id))V.id=null;
  const a=me.role==='admin'||tab==='mine',m=$('main');
  if(V.k==='edit'){const d=get(V.id);m.innerHTML=crumbs(d.id)+`<label>Title</label><input id="et" value="${esc(d.n)}"><label>Content</label><textarea id="eb" rows="12">${esc(d.b)}</textarea><div class="row"><button class="btn" data-a="save">Save</button><button class="btn ghost" data-a="open" data-id="${d.id}">Cancel</button></div>`;return}
- if(V.k==='doc'){const d=get(V.id);m.innerHTML=crumbs(d.id)+`<div class="doc">${d.b?esc(d.b):'<span style="color:var(--mut)">This document is empty.</span>'}</div><div class="row"><button class="btn ghost" data-a="go" data-id="${d.p||''}">Back</button>${a?'<button class="btn" data-a="edit">Edit</button>':''}</div>`;return}
+ if(V.k==='doc'){const d=get(V.id),f=V.from&&get(V.from);m.innerHTML=crumbs(d.id)+`<div class="doc">${d.b?xlink(d.b,d.id):'<span style="color:var(--mut)">This document is empty.</span>'}</div><div class="row">${f?`<button class="btn ghost" data-a="open" data-id="${f.id}">← ${esc(f.n)}</button>`:''}${Q?'<button class="btn ghost" data-a="sback">← Results</button>':''}<button class="btn ghost" data-a="go" data-id="${d.p||''}">Back</button>${a?'<button class="btn" data-a="edit">Edit</button>':''}</div>`;return}
  let h=crumbs(V.id)+(tab==='mine'&&!V.id?'<p style="color:var(--mut);margin:0 0 1rem">Private workspace: only your account can see these files.</p>':'');
  if(a){h+=`<div class="row" style="margin-bottom:1rem"><button class="btn" data-a="new" data-t="folder">+ Folder</button><button class="btn" data-a="new" data-t="doc">+ Document</button></div>`;
   if(ask)h+=`<div class="bar"><label>${ask.id?'Rename':'New '+ask.t} name</label><input id="an" value="${esc(ask.id?get(ask.id).n:'')}"><div class="row"><button class="btn" data-a="askok">OK</button><button class="btn ghost" data-a="askno">Cancel</button></div></div>`;
   if(tab==='arch'&&!NODES.length)h+=`<div class="bar">The archive is empty. <button class="btn sm" data-a="seed">Create starter folders</button></div>`;
   if(tab==='arch'&&!V.id&&pending().length)h+=`<div class="bar"><button class="btn sm" data-a="import">Apply ${pending().length} updates</button> Adds, moves, and removes folders and documents to match your latest plan.</div>`}
  h+='<div class="list">'+(kids(V.id).map(n=>`<div class="fr" data-a="open" data-id="${n.id}">${IC[n.t]}<span class="n">${esc(n.n)}</span>${a?`${tab==='arch'?`<select data-lv="${n.id}" style="width:auto;margin:0;padding:.2rem .4rem;font-size:.8rem" title="Who can see this">${[['user','Everyone'],['bv','Black Vault and up'],['admin','Admin only']].map(o=>`<option value="${o[0]}" ${n.lv===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>`:''}<button class="btn ghost sm" data-a="ren" data-id="${n.id}">Rename</button><button class="btn danger sm" data-a="del" data-id="${n.id}">${del===n.id?'Sure?':'Remove'}</button>`:''}</div>`).join('')||'<div class="empty">This folder is empty.</div>')+'</div>';
- m.innerHTML=h;const i=$('an');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter')act('askok')}}}
+ m.innerHTML=h;wireSearch();const i=$('an');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter')act('askok')}}}
+let Q='';
+function xlink(t,cur){let h=esc(t);if(tab!=='arch')return h;
+ const m=new Map();NODES.filter(n=>n.t==='doc'&&n.id!==cur&&/^(AE|Incident)-\S+$/.test(n.n)).sort((a,b)=>b.n.length-a.n.length).forEach(n=>{if(!m.has(n.n))m.set(n.n,n.id)});
+ if(!m.size)return h;
+ const re=new RegExp('(^|[^A-Za-z0-9-])('+[...m.keys()].map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(?![A-Za-z0-9])','g');
+ return h.replace(re,(_,p,k)=>p+'<a class="xr" data-a="xref" data-id="'+m.get(k)+'">'+k+'</a>')}
+function wireSearch(){const l=document.querySelector('#main .list');if(!l)return;l.id='ls';
+ l.insertAdjacentHTML('beforebegin','<input id="sq" type="search" placeholder="Search names and contents..." autocomplete="off" value="'+esc(Q)+'" style="margin:0 0 1rem"><div id="sr"></div>');
+ $('sq').oninput=()=>{Q=$('sq').value;runSearch()};runSearch()}
+function runSearch(){const q=Q.trim().toLowerCase(),r=$('sr'),l=$('ls');if(!r||!l)return;
+ if(q.length<2){r.innerHTML='';l.classList.remove('hide');return}
+ l.classList.add('hide');
+ const hits=[];pool().forEach(n=>{const nm=n.n.toLowerCase().includes(q),i=n.t==='doc'?(n.b||'').toLowerCase().indexOf(q):-1;if(nm||i>=0)hits.push({n,i,nm})});
+ hits.sort((a,b)=>(b.nm-a.nm)||nat(a.n.n,b.n.n));
+ r.innerHTML='<p style="color:var(--mut)">'+hits.length+' result'+(hits.length===1?'':'s')+(hits.length>50?' (showing 50)':'')+'</p>'+hits.slice(0,50).map(({n,i})=>{
+  let sn='';if(i>=0){const raw=n.b.slice(Math.max(0,i-45),i+q.length+75).replace(/\s+/g,' '),k=raw.toLowerCase().indexOf(q);sn='<span class="sn">…'+(k<0?esc(raw):esc(raw.slice(0,k))+'<mark>'+esc(raw.slice(k,k+q.length))+'</mark>'+esc(raw.slice(k+q.length)))+'…</span>'}
+  return '<div class="fr" data-a="open" data-id="'+n.id+'">'+IC[n.t]+'<span class="n">'+esc(n.n)+'<span class="sn">'+esc(trail(n.p).map(x=>x.n).join(' › ')||'TOA')+'</span>'+sn+'</span></div>'}).join('')}
 async function seed(){const w=writeBatch(fs);const go=(p,sp)=>{if(Array.isArray(sp))sp.forEach(n=>w.set(doc(collection(fs,'nodes')),{p,t:'doc',n,b:'',lv:'user'}));else for(const k in sp){const r=doc(collection(fs,'nodes'));w.set(r,{p,t:'folder',n:k,lv:'user'});go(r.id,sp[k])}};go(null,SPEC);await w.commit()}
 async function act(a,id,t){try{
- if(a==='go'){V={k:'browse',id:id||null};ask=del=null}
+ if(a==='go'){V={k:'browse',id:id||null};ask=del=null;Q=''}
+ else if(a==='xref'){const n=get(id);if(n)V={k:'doc',id:n.id,from:V.k==='doc'?V.id:null};ask=del=null}
+ else if(a==='sback'){V={k:'browse',id:null};ask=del=null}
  else if(a==='open'){const n=get(id);V=n.t==='folder'?{k:'browse',id:n.id}:{k:'doc',id:n.id};ask=del=null}
  else if(a==='new')ask={t,id:null};
  else if(a==='ren')ask={id};
@@ -254,6 +279,27 @@ function updateChat(force){const b=$('chatBox');if(!b)return;const near=force||b
 function chatLock(){const i=$('chatText'),b=$('chatSend'),n=$('chatNote');if(!i)return;i.disabled=b.disabled=!!me.nochat;i.placeholder=me.nochat?'Sending is turned off for your account':'Message everyone...';n.classList.toggle('hide',!me.nochat)}
 async function sendChat(){if(me.nochat)return;const i=$('chatText'),v=i.value.trim();if(!v)return;i.value='';
  try{await addDoc(collection(fs,'chat'),{u:me.u,uid:me.uid,text:v.slice(0,500),t:serverTimestamp()})}catch(e){i.value=v;toast('Could not send: '+(e.code||e.message))}}
+async function exportData(){
+ if(!me||me.role!=='admin')return;
+ const b=$('exportBtn');b.disabled=true;b.textContent='Exporting...';
+ try{
+  const by={},items=[];let files=0;
+  NODES.forEach(n=>(by[n.p||'']=by[n.p||'']||[]).push(n));
+  const walk=(pid,path)=>{(by[pid||'']||[]).sort((x,y)=>nat(x.n,y.n)).forEach(n=>{
+    const p=path+n.n;
+    if(n.t==='folder'){items.push({path:p+'/',type:'folder',clearance:n.lv});walk(n.id,p+'/')}
+    else{items.push({path:p,type:'doc',clearance:n.lv,content:n.b||''});files++}})};
+  walk(null,'');
+  const data={exported:new Date().toISOString(),exportedBy:me.u,items};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='obsidian-archives-'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  toast('Exported '+files+' documents.');
+ }catch(e){toast('Export failed: '+(e.message||e))}
+ b.disabled=false;b.textContent='Export'}
+$('exportBtn').onclick=exportData;
 function pwView(){$('main').innerHTML=`<div class="crumbs"><a data-a="go" data-id="">TOA</a><i>›</i><b>Change password</b></div><div style="max-width:380px"><label>Current password</label><input id="pw0" type="password" autocomplete="current-password"><label>New password</label><input id="pw1" type="password" autocomplete="new-password"><label>Confirm new password</label><input id="pw2" type="password" autocomplete="new-password"><div class="msg" id="pwm"></div><button class="btn" id="pws">Update password</button></div>`;
  $('pws').onclick=async()=>{const m=$('pwm'),cur=$('pw0').value,nw=$('pw1').value;m.className='msg';
   if(!cur||!nw)return m.textContent='Fill in every field.';
